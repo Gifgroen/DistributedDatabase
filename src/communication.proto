@@ -1,0 +1,23 @@
+option optimize_for = LITE_RUNTIME;
+
+
+message HashedStorageHeader {
+	enum HashAlgorithm {
+		SHA1 = 1;
+	}
+	required HashAlgorithm hashAlgorithm = 1;
+	required bytes hash = 2;
+	required StorageHeader header = 3;
+}
+
+message StorageHeader {
+	enum Operation {
+		READ = 1;
+		WRITE = 2;
+		XOREDWRITE = 3;
+	}
+	required Operation operation = 1;
+	required uint64 offset = 2;
+	required uint64 length = 3;
+	required uint64 requestTimestamp = 4;
+}
