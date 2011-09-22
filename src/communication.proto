@@ -14,7 +14,7 @@ message StorageHeader {
 	enum Operation {
 		READ = 1;
 		WRITE = 2;
-		XOREDWRITE = 3;
+		XOR_WRITE = 3;
 	}
 	required Operation operation = 1;
 	required uint64 offset = 2;
