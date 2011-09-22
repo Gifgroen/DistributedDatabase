@@ -86,7 +86,7 @@ class HeaderParser(DataReceiver):
             print "read"
         elif opp == StorageHeader.WRITE:
             print "write"
-        elif opp == StorageHeader.XOREDWRITE:
+        elif opp == StorageHeader.XOR_WRITE:
             print "xoredwrite"
         else:
             raise Exception("Unkown operation")
