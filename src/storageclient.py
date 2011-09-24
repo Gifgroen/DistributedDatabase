@@ -8,7 +8,7 @@ from communication_pb2 import HashedStorageHeader, StorageHeader
 from storageserver import PRIVATE_HASH_KEY # for testing only
 
 HOST = 'localhost'    # The remote host
-PORT = 7777           # The same port as used by the server
+PORT = 8989           # The same port as used by the server
 
 STRUCT_BYTE = "!B"
 
