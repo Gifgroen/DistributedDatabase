@@ -21,3 +21,12 @@ message StorageHeader {
 	required uint64 length = 3;
 	required uint64 requestTimestamp = 4;
 }
+
+message StorageResponseHeader {
+	enum Status {
+		OK = 1;
+		ERROR = 2;
+	}
+	required Status status = 1;
+	required StorageHeader header = 2;
+}

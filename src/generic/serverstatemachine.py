@@ -1,4 +1,4 @@
-from struct import unpack
+from struct import unpack, pack
 
 from twisted.python import log
 from twisted.internet.protocol import Protocol
@@ -24,12 +24,15 @@ class DataReceiver(object):
         self.protocol = protocol
         
     def popByte(self):
-        res = self.protocol.buf[0]
-        self.protocol.buf = self.protocol.buf[1:]
-        return res
+        return self.popBytes(1)
         
     def updateReceiver(self, receiver):
         self.protocol.dataReceiver = receiver
+        
+    def popBytes(self, length):
+        res = self.protocol.buf[:length]
+        self.protocol.buf = self.protocol.buf[length:]
+        return res
     
     """
     Protocol has data received
@@ -61,6 +64,18 @@ class BinaryDataReceiverProtocol(Protocol):
     def __init__(self):
         self.buf = ""
         self.dataReceiver = ProtocolVersionChecker(self)
+        
+    def writeRaw(self, rawData):
+        # TODO fix mutex?
+        self.transport.write(rawData)
+        
+    def writeMsg(self, protoBufMsg):
+        # TODO write mutex / queue?
+        msgData = protoBufMsg.SerializeToString()
+        self.transport.write(pack(STRUCT_BYTE, len(msgData)))
+        log.msg('Send protoBufMsg of length %d to client.' % len(msgData))
+        self.transport.write(msgData)
+        
         
     def connectionMade(self):
         self.factory.connections.append(self)
