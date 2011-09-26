@@ -1,6 +1,10 @@
 from Queue import Queue, Empty
 from threading import Lock, Thread
 
+from twisted.internet import reactor
+from twisted.python import log
+
+
 class StorageDatabase(object):
     
     """
@@ -12,6 +16,8 @@ class StorageDatabase(object):
         self.filename = filename
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
+        reactor.addSystemEventTrigger('during','shutdown', self.stop)
+        
     
     """
     Starts the database worker.
@@ -23,8 +29,8 @@ class StorageDatabase(object):
             raise Exception("Already running")
         self.dbFile = open(self.filename, 'w+b')
         self.cont = True
-        t = Thread(target = self._workerFunction)
-        t.start()
+        reactor.callInThread(self._workerFunction)
+        
     
     """
     Stops the worker queue as soon as all the running
@@ -54,8 +60,8 @@ class StorageDatabase(object):
     perform a piece of work that is inside the que.
     """
     def _handleOneRequest(self):
-        try: # blocking for 10 seconds, after this Empty is thrown
-            args = self.work_queue.get(True, 10)
+        try: # blocking for 1 second, after this Empty is thrown
+            args = self.work_queue.get(True, 1)
             if (len(args) == 3):
                 self._handleRead(*args)
             else: # len(args) == 2
@@ -69,7 +75,7 @@ class StorageDatabase(object):
     def _handleRead(self, offset, length, callback):
         self.dbFile.seek(offset)
         data = self.dbFile.read(length)
-        callback(offset, length, data)
+        reactor.callFromThread(callback, offset, length, data)
     
     """
     Handle write operation
@@ -88,26 +94,36 @@ class StorageDatabase(object):
             self._handleOneRequest()
         self.dbFile.close()
 
+#TODO refactor this global database:
+STORAGE_DATABASE = StorageDatabase('storagedb.bin')
+
+
 
 
 """
 For simple testing only...
 """
 if __name__ == '__main__':
-    print 'Performing simple read/write tests'
-    print '-'*50
+    import sys
+    log.startLogging(sys.stdout)
+    log.msg('Performing simple read/write tests')
     
     def readFinished(offset, length, data):
-        print 'read from %d with length %d: %s' % (offset, length, data)
+        log.msg('read from %d with length %d: %s' % (offset, length, data))
     
     a = StorageDatabase('testdb.bin')
     a.start()
-    msg = 'Dit is een test 12345'
-    a.pushWrite(0, msg)
-    a.pushWrite(1000, msg)
     
-    a.pushRead(1000, len(msg), readFinished)
-    a.pushRead(0, len(msg), readFinished)
+    def doTest():
+        msg = 'Dit is een test 12345'
+        
+        a.pushWrite(0, msg)
+        a.pushWrite(1000, msg)
     
-    a.stop()
+        a.pushRead(1000, len(msg), readFinished)
+        a.pushRead(0, len(msg), readFinished)
+        log.msg('Finished... press ctrl+c')
+    
+    reactor.callLater(0, doTest)
+    reactor.run()
     
