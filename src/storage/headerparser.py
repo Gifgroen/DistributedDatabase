@@ -1,6 +1,5 @@
 from generic.serverstatemachine import DataReceiver, HeaderLengthParser
 from storage.contentreceiver import WriteContentReceiver
-from storage.storagedb import STORAGE_DATABASE
 
 
 from generic.communication_pb2 import HashedStorageHeader, StorageHeader, StorageResponseHeader
@@ -33,7 +32,7 @@ class StorageHeaderParser(DataReceiver):
             raise Exception("Hash key expired %d seconds" % timediff)
     
     # TODO refactor to seperate method
-    def handleRead(self, ):
+    def handleRead(self):
         log.msg('Parsed READ header, set state back to HeaderLengthParser, posting read task in queue')
         def diskReadFinished(offset, length, data):
             assert length == self.header.header.length
@@ -50,7 +49,7 @@ class StorageHeaderParser(DataReceiver):
             self.protocol.writeMsg(responseHeader)
             self.protocol.writeRaw(data)
             log.msg('diskReadFinished finished writing')
-        STORAGE_DATABASE.pushRead(self.header.header.offset, self.header.header.length, diskReadFinished)
+        self.protocol.factory.server.db.pushRead(self.header.header.offset, self.header.header.length, diskReadFinished)
         
     def setMode(self):
         opp = self.header.header.operation

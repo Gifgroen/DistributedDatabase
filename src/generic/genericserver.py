@@ -28,6 +28,7 @@ class ProtoMessageServer(object):
     def _genFactory(self):
         factory = Factory()
         factory.connections = []
+        factory.server = self
         factory.protocol = BinaryDataReceiverProtocol
         factory.headerParserClass = self.headerParserClass
         return factory

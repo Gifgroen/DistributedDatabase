@@ -3,14 +3,22 @@
 from optparse import OptionParser
 from generic.genericserver import ProtoMessageServer
 from storage.headerparser import StorageHeaderParser
-from storage.storagedb import STORAGE_DATABASE
+from storage.storagedb import StorageDatabase
+
+class StorageServer(ProtoMessageServer):
+    def __init__(self, options, args):
+        super(StorageServer, self).__init__(options, args)
+        self.db = StorageDatabase(options.databasefile)
+        self.db.start()
+
 
 if __name__ == '__main__':
     parser = OptionParser()
     ProtoMessageServer.addServerOptions(parser)
+    parser.add_option("-d", "--db", dest="databasefile", default="storagedb.bin", help="loctation of database file", metavar="FILE")
+    
     (options, args) = parser.parse_args()
-    server = ProtoMessageServer(options, args)
+    server = StorageServer(options, args)
     server.setHeaderParserClass(StorageHeaderParser)
-    STORAGE_DATABASE.start()
+    
     server.run()
-    STORAGE_DATABASE.stop()

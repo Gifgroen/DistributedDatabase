@@ -66,11 +66,9 @@ class BinaryDataReceiverProtocol(Protocol):
         self.dataReceiver = ProtocolVersionChecker(self)
         
     def writeRaw(self, rawData):
-        # TODO fix mutex?
         self.transport.write(rawData)
         
     def writeMsg(self, protoBufMsg):
-        # TODO write mutex / queue?
         msgData = protoBufMsg.SerializeToString()
         self.transport.write(pack(STRUCT_BYTE, len(msgData)))
         log.msg('Send protoBufMsg of length %d to client.' % len(msgData))

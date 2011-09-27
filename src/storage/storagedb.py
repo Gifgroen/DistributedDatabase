@@ -94,11 +94,6 @@ class StorageDatabase(object):
             self._handleOneRequest()
         self.dbFile.close()
 
-#TODO refactor this global database:
-STORAGE_DATABASE = StorageDatabase('storagedb.bin')
-
-
-
 
 """
 For simple testing only...
@@ -122,7 +117,6 @@ if __name__ == '__main__':
     
         a.pushRead(1000, len(msg), readFinished)
         a.pushRead(0, len(msg), readFinished)
-        log.msg('Finished... press ctrl+c')
     
     reactor.callLater(0, doTest)
     reactor.run()

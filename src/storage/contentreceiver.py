@@ -1,6 +1,5 @@
 from generic.serverstatemachine import DataReceiver, HeaderLengthParser
 from twisted.python import log
-from storage.storagedb import STORAGE_DATABASE
 from generic.communication_pb2 import StorageResponseHeader
 
 class WriteContentReceiver(DataReceiver):
@@ -15,7 +14,7 @@ class WriteContentReceiver(DataReceiver):
     
     def handleReceivedBlock(self, offset, data):
         log.msg('write to db: %s at %d' % (data, offset))
-        STORAGE_DATABASE.pushWrite(self.offset, data)
+        self.protocol.factory.server.db.pushWrite(self.offset, data)
         # TODO XOR and send the data to XOR-mate
         
         
