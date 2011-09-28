@@ -30,3 +30,9 @@ message StorageResponseHeader {
 	required Status status = 1;
 	required StorageHeader header = 2;
 }
+
+message DictionaryResponseHeader {
+    repeated HashedStorageHeader headers = 1;
+    repeated string hosts = 3;
+    repeated int ports = 2;
+}
