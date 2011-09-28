@@ -5,6 +5,13 @@ from twisted.internet import reactor
 from twisted.python import log
 
 
+def xorBytes(a, b):
+    assert len(a) == len(b)
+    return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in zip(a, b))
+
+def byteValue(bytes):
+    return [ord(byte) for byte in bytes]
+
 class StorageDatabase(object):
     
     """
@@ -30,7 +37,6 @@ class StorageDatabase(object):
         self.dbFile = open(self.filename, 'w+b')
         self.cont = True
         reactor.callInThread(self._workerFunction)
-        
     
     """
     Stops the worker queue as soon as all the running
@@ -82,14 +88,10 @@ class StorageDatabase(object):
     """
     Handle read operation
     """
-    def _handleRead(self, offset, length, callback, *args):
+    def _handleRead(self, offset, length, callback, args):
         self.dbFile.seek(offset)
         data = self.dbFile.read(length)
-        log.msg(args)
-        if args[0]:
-            reactor.callFromThread(callback, offset, length, data, *args)
-        else:
-            reactor.callFromThread(callback, offset, length, data)
+        reactor.callFromThread(callback, offset, length, data, *args)
     
     """
     Handle write operation
@@ -102,12 +104,10 @@ class StorageDatabase(object):
     Handle XOR-write operation
     """
     def _handleXORWrite(self, offset, data):
-        for byte in data:
-            self.dbFile.seek(offset)
-            original = self.dbFile.read(1)
-            self.dbFile.seek(offset)
-            self.dbFile.write(byte ^ original)
-            offset += 1
+        self.dbFile.seek(offset)
+        original = self.dbFile.read(len(data))
+        self.dbFile.seek(offset)
+        self.dbFile.write(xorBytes(data, original))
     
     """
     Worker function that continues working until
@@ -130,6 +130,10 @@ if __name__ == '__main__':
     
     def readFinished(offset, length, data):
         log.msg('read from %d with length %d: %s' % (offset, length, data))
+        
+    def xorReadFinished(offset, length, data, expected):
+        log.msg('read (%d): %s' % (len(data), byteValue(data)))
+        log.msg('expected (%d): %s' % (len(expected), byteValue(expected)))
     
     a = StorageDatabase('testdb.bin')
     a.start()
@@ -142,6 +146,14 @@ if __name__ == '__main__':
     
         a.pushRead(1000, len(msg), readFinished)
         a.pushRead(0, len(msg), readFinished)
+        
+        original = '1,2,3,4,5'
+        new = 'a,b,c,d,e'
+        result = xorBytes(new, original)
+        
+        a.pushWrite(100, original)
+        a.pushXORWrite(100, new)
+        a.pushRead(100, len(result), xorReadFinished, result)
     
     reactor.callLater(0, doTest)
     reactor.run()
