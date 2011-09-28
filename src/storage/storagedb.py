@@ -16,7 +16,7 @@ class StorageDatabase(object):
         self.filename = filename
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
-        reactor.addSystemEventTrigger('during','shutdown', self.stop)
+        reactor.addSystemEventTrigger('during', 'shutdown', self.stop)
         
     
     """
@@ -45,7 +45,7 @@ class StorageDatabase(object):
     and length, and the data.
     """
     def pushRead(self, offset, length, callback, *args):
-        self.work_queue.put((offset, length, callback, args))
+        self.work_queue.put(('r', offset, length, callback, args))
     
     """
     Queue write request.
@@ -53,29 +53,43 @@ class StorageDatabase(object):
     the offset to disk.
     """
     def pushWrite(self, offset, data):
-        self.work_queue.put((offset, data))
-    
+        self.work_queue.put(('w', offset, data))
+
+    """
+    Queue XOR write request.
+    This method writes all the data starting from
+    the offset to disk and XOR-es it with the current data.
+    """
+    def pushXORWrite(self, offset, data):
+        self.work_queue.put(('x', offset, data))
+        
     """
     Blocking request (with timeout) that tries to
     perform a piece of work that is inside the que.
     """
     def _handleOneRequest(self):
         try: # blocking for 1 second, after this Empty is thrown
-            args = self.work_queue.get(True, 1)
-            if (len(args) == 4):
-                self._handleRead(*args)
-            else: # len(args) == 2
-                self._handleWrite(*args)
+            task = self.work_queue.get(True, 1)
+            if task[0] == 'r':
+                self._handleRead(*task[1:])
+            elif task[0] == 'w':
+                self._handleWrite(*task[1:])
+            elif task[0] == 'x':
+                self._handleXORWrite(*task[1:])
         except Empty:
             return
         
     """
     Handle read operation
     """
-    def _handleRead(self, offset, length, callback):
+    def _handleRead(self, offset, length, callback, *args):
         self.dbFile.seek(offset)
         data = self.dbFile.read(length)
-        reactor.callFromThread(callback, offset, length, data)
+        log.msg(args)
+        if args[0]:
+            reactor.callFromThread(callback, offset, length, data, *args)
+        else:
+            reactor.callFromThread(callback, offset, length, data)
     
     """
     Handle write operation
@@ -83,6 +97,17 @@ class StorageDatabase(object):
     def _handleWrite(self, offset, data):
         self.dbFile.seek(offset)
         self.dbFile.write(data)
+        
+    """
+    Handle XOR-write operation
+    """
+    def _handleXORWrite(self, offset, data):
+        for byte in data:
+            self.dbFile.seek(offset)
+            original = self.dbFile.read(1)
+            self.dbFile.seek(offset)
+            self.dbFile.write(byte ^ original)
+            offset += 1
     
     """
     Worker function that continues working until
