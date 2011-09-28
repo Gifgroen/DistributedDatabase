@@ -1,8 +1,8 @@
-from generic.communication_pb2 import HashedLocationHeader # Dictheaders
+from generic.communication_pb2 import DictionaryReponseHeader # Dictheaders
 
 from twisted.python import log
 
-from dictionary import LocationHandler
+from dictionary.server import LocationHandler
 
 PROTOCOL_VERSION = 0b1
 
@@ -25,8 +25,11 @@ class DictionaryRequestHandler():
             raise Exception("Received 0 length message")
 
     def parsedMessage(self, msgData):
-        # locationMessage = HashedLocationHeader()
-        # locationMessage.ParseFromString(msgData)
+        requestMessage = HashedStorageHeader()
+        requestMessage.ParseFromString(msgData)
+        
+        # TODO: Parse message
+        log.msg("parsed message!")
 
-        # log.msg("parsed message! TODO")
-        # TODO: Parse message -> delegate request
+        # TODO -> delegate request
+        self.delegate.handleRequest(requestMessage)

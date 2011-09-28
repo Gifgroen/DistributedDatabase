@@ -11,11 +11,11 @@ message HashedStorageHeader {
 }
 
 message StorageHeader {
-	enum Operation {
-		READ = 1;
-		WRITE = 2;
-		XOR_WRITE = 3;
-	}
+    enum Operation {
+        READ = 1;
+        WRITE = 2;
+        XOR_WRITE = 3;
+    }
 	required Operation operation = 1;
 	required uint64 offset = 2;
 	required uint64 length = 3;
@@ -34,5 +34,5 @@ message StorageResponseHeader {
 message DictionaryResponseHeader {
     repeated HashedStorageHeader headers = 1;
     repeated string hosts = 3;
-    repeated int ports = 2;
+    repeated uint64 ports = 2;
 }

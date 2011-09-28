@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='communication.proto',
   package='',
-  serialized_pb='\n\x13\x63ommunication.proto\"\x99\x01\n\x13HashedStorageHeader\x12\x39\n\rhashAlgorithm\x18\x01 \x02(\x0e\x32\".HashedStorageHeader.HashAlgorithm\x12\x0c\n\x04hash\x18\x02 \x02(\x0c\x12\x1e\n\x06header\x18\x03 \x02(\x0b\x32\x0e.StorageHeader\"\x19\n\rHashAlgorithm\x12\x08\n\x04SHA1\x10\x01\"\xa7\x01\n\rStorageHeader\x12+\n\toperation\x18\x01 \x02(\x0e\x32\x18.StorageHeader.Operation\x12\x0e\n\x06offset\x18\x02 \x02(\x04\x12\x0e\n\x06length\x18\x03 \x02(\x04\x12\x18\n\x10requestTimestamp\x18\x04 \x02(\x04\"/\n\tOperation\x12\x08\n\x04READ\x10\x01\x12\t\n\x05WRITE\x10\x02\x12\r\n\tXOR_WRITE\x10\x03\"\x83\x01\n\x15StorageResponseHeader\x12-\n\x06status\x18\x01 \x02(\x0e\x32\x1d.StorageResponseHeader.Status\x12\x1e\n\x06header\x18\x02 \x02(\x0b\x32\x0e.StorageHeader\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\x42\x02H\x03')
+  serialized_pb='\n\x13\x63ommunication.proto\"\x99\x01\n\x13HashedStorageHeader\x12\x39\n\rhashAlgorithm\x18\x01 \x02(\x0e\x32\".HashedStorageHeader.HashAlgorithm\x12\x0c\n\x04hash\x18\x02 \x02(\x0c\x12\x1e\n\x06header\x18\x03 \x02(\x0b\x32\x0e.StorageHeader\"\x19\n\rHashAlgorithm\x12\x08\n\x04SHA1\x10\x01\"\xa7\x01\n\rStorageHeader\x12+\n\toperation\x18\x01 \x02(\x0e\x32\x18.StorageHeader.Operation\x12\x0e\n\x06offset\x18\x02 \x02(\x04\x12\x0e\n\x06length\x18\x03 \x02(\x04\x12\x18\n\x10requestTimestamp\x18\x04 \x02(\x04\"/\n\tOperation\x12\x08\n\x04READ\x10\x01\x12\t\n\x05WRITE\x10\x02\x12\r\n\tXOR_WRITE\x10\x03\"\x83\x01\n\x15StorageResponseHeader\x12-\n\x06status\x18\x01 \x02(\x0e\x32\x1d.StorageResponseHeader.Status\x12\x1e\n\x06header\x18\x02 \x02(\x0b\x32\x0e.StorageHeader\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"_\n\x18\x44ictionaryResponseHeader\x12%\n\x07headers\x18\x01 \x03(\x0b\x32\x14.HashedStorageHeader\x12\r\n\x05hosts\x18\x03 \x03(\t\x12\r\n\x05ports\x18\x02 \x03(\x04\x42\x02H\x03')
 
 
 
@@ -207,6 +207,48 @@ _STORAGERESPONSEHEADER = descriptor.Descriptor(
   serialized_end=481,
 )
 
+
+_DICTIONARYRESPONSEHEADER = descriptor.Descriptor(
+  name='DictionaryResponseHeader',
+  full_name='DictionaryResponseHeader',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    descriptor.FieldDescriptor(
+      name='headers', full_name='DictionaryResponseHeader.headers', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    descriptor.FieldDescriptor(
+      name='hosts', full_name='DictionaryResponseHeader.hosts', index=1,
+      number=3, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    descriptor.FieldDescriptor(
+      name='ports', full_name='DictionaryResponseHeader.ports', index=2,
+      number=2, type=4, cpp_type=4, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=483,
+  serialized_end=578,
+)
+
 _HASHEDSTORAGEHEADER.fields_by_name['hashAlgorithm'].enum_type = _HASHEDSTORAGEHEADER_HASHALGORITHM
 _HASHEDSTORAGEHEADER.fields_by_name['header'].message_type = _STORAGEHEADER
 _HASHEDSTORAGEHEADER_HASHALGORITHM.containing_type = _HASHEDSTORAGEHEADER;
@@ -215,9 +257,11 @@ _STORAGEHEADER_OPERATION.containing_type = _STORAGEHEADER;
 _STORAGERESPONSEHEADER.fields_by_name['status'].enum_type = _STORAGERESPONSEHEADER_STATUS
 _STORAGERESPONSEHEADER.fields_by_name['header'].message_type = _STORAGEHEADER
 _STORAGERESPONSEHEADER_STATUS.containing_type = _STORAGERESPONSEHEADER;
+_DICTIONARYRESPONSEHEADER.fields_by_name['headers'].message_type = _HASHEDSTORAGEHEADER
 DESCRIPTOR.message_types_by_name['HashedStorageHeader'] = _HASHEDSTORAGEHEADER
 DESCRIPTOR.message_types_by_name['StorageHeader'] = _STORAGEHEADER
 DESCRIPTOR.message_types_by_name['StorageResponseHeader'] = _STORAGERESPONSEHEADER
+DESCRIPTOR.message_types_by_name['DictionaryResponseHeader'] = _DICTIONARYRESPONSEHEADER
 
 class HashedStorageHeader(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
@@ -236,5 +280,11 @@ class StorageResponseHeader(message.Message):
   DESCRIPTOR = _STORAGERESPONSEHEADER
   
   # @@protoc_insertion_point(class_scope:StorageResponseHeader)
+
+class DictionaryResponseHeader(message.Message):
+  __metaclass__ = reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _DICTIONARYRESPONSEHEADER
+  
+  # @@protoc_insertion_point(class_scope:DictionaryResponseHeader)
 
 # @@protoc_insertion_point(module_scope)
