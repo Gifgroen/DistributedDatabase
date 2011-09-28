@@ -22,6 +22,8 @@ class StorageRequestHandler():
     def __init__(self, protocol):
         self.protocol = protocol
         self.db = protocol.factory.db
+        self.signedHeader = None
+        self.currentWriteOffset = 0
         
     def parsedVersionToken(self, version):
         log.msg("parsedVersionToken(%d)" % version)
@@ -33,23 +35,24 @@ class StorageRequestHandler():
         if length == 0:
             raise Exception("Received 0 length message")
             
-    def _validateHash(self, signedHeader):
-        if signedHeader.hashAlgorithm != HashedStorageHeader.SHA1:
+    def _validateHash(self):
+        if self.signedHeader.hashAlgorithm != HashedStorageHeader.SHA1:
             raise Exception("Unsupported hash")
-        sha1hash = sha1(signedHeader.header.SerializeToString() + PRIVATE_HASH_KEY)
+        sha1hash = sha1(self.signedHeader.header.SerializeToString() + PRIVATE_HASH_KEY)
         log.msg('parsed hash: %s' % sha1hash.hexdigest())
-        if signedHeader.hash != sha1hash.digest():
+        if self.signedHeader.hash != sha1hash.digest():
             raise Exception("Incorrect hash")
-        timediff = int(time.time()) - signedHeader.header.requestTimestamp
+        timediff = int(time.time()) - self.signedHeader.header.requestTimestamp
         if timediff > HASH_EXPIRE_SECONDS:
             raise Exception("Hash key expired %d seconds" % timediff)
         
-    def _handleStorgeHeader(self, header):
+    def _handleStorgeHeader(self):
+        header = self.signedHeader.header
         opp = header.operation
         length = header.length
         if opp == StorageHeader.READ:
             log.msg('Parsed READ header,  read operation')
-            self.db.pushRead(header, self.diskReadFinished) # TOOOOOOOOOOOOOOOODOOOOOOOOOOOOOOOO
+            self.db.pushRead(header.offset, header.length, self.diskReadFinished, header)
             return 0 # we don't want to receive any raw data
         elif opp == StorageHeader.WRITE:
             log.msg('Parsed WRITE header, waiting for %d bytes' % length)
@@ -61,9 +64,14 @@ class StorageRequestHandler():
     
     """
     Signaled by database if read data is finished
-    TODO: fix multiple read bug... header should be argument of diskReadFinished
+    Important note: this function is called from the disk r/w
+    thread, so in the meanwhile it is theoretical possible that
+    self.signedHeader is replaced with a new operation. This 
+    means that only parameters might be used.
+    self.protocol.writeMsg can be called since only one thread
+    is allowed to execute this.
     """
-    def diskReadFinished(header, data):
+    def diskReadFinished(offset, length, data, header):
         log.msg('diskReadFinished: %s...' % data[:30])
         responseHeader = StorageResponseHeader()
         
@@ -79,14 +87,30 @@ class StorageRequestHandler():
         log.msg('diskReadFinished finished writing')
         
     def parsedMessage(self, msgData):
-        signedHeader = HashedStorageHeader()
-        signedHeader.ParseFromString(msgData)
-        self._validateHash(signedHeader)
-        return self._handleStorgeHeader(signedHeader)
+        self.signedHeader = HashedStorageHeader()
+        self.signedHeader.ParseFromString(msgData)
+        self.currentWriteOffset = 0
+        self._validateHash()
+        return self._handleStorgeHeader()
+        
+    def _sendXORUpdate(self, bytes): # what if is not received by other peer?
+        pass # TODO
+        
+    def _writeFinished(self):
+        log.msg('_writeFinished')
+        pass # send ACK to client
+        # must it be sure that XOR-update is processed?
         
     def parsedRawBytes(self, bytes): # doesn't have to be implemented by dictionary service
         log.msg("Received %d raw bytes" % len(bytes))
-        # TODO: send to storage or XOR and send to storage
-        
-        
-        
+        header = self.signedHeader.header
+        if header.operation == StorageHeader.WRITE:
+            log.msg('Write raw bytes of length %d' % len(bytes))
+            self.db.pushWrite(self.currentWriteOffset, bytes)
+            self._sendXORUpdate(bytes)
+        elif header.operation == StorageHeader.XOR_WRITE:
+            log.msg('Write the XORED result raw bytes of length %d' % len(bytes))
+            self.db.pushXORWrite(self.currentWriteOffset, bytes)
+        self.currentWriteOffset += len(bytes)
+        if self.currentWriteOffset == header.offset + header.length:
+            self._writeFinished()#TODO
