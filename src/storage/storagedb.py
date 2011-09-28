@@ -44,8 +44,8 @@ class StorageDatabase(object):
     The callback is called with the original offset
     and length, and the data.
     """
-    def pushRead(self, offset, length, callback):
-        self.work_queue.put((offset, length, callback))
+    def pushRead(self, offset, length, callback, *args):
+        self.work_queue.put((offset, length, callback, args))
     
     """
     Queue write request.
@@ -62,7 +62,7 @@ class StorageDatabase(object):
     def _handleOneRequest(self):
         try: # blocking for 1 second, after this Empty is thrown
             args = self.work_queue.get(True, 1)
-            if (len(args) == 3):
+            if (len(args) == 4):
                 self._handleRead(*args)
             else: # len(args) == 2
                 self._handleWrite(*args)
