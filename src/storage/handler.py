@@ -4,6 +4,10 @@ from twisted.python import log
 
 PROTOCOL_VERSION = 0b1
 
+PRIVATE_HASH_KEY = "BLABLABLA"
+HASH_EXPIRE_SECONDS = 30
+
+
 """
 Request handler for extrnal storage requests, every connection
 has its own handler, so it is save to store private properties
@@ -12,8 +16,9 @@ The database is shared accros other StorageRequestHandlers.
 """
 class StorageRequestHandler():
     
-    def __init__(self, factory):
-        self.db = factory.db
+    def __init__(self, protocol):
+        self.protocol = protocol
+        self.db = protocol.factory.db
         
     def parsedVersionToken(self, version):
         log.msg("parsedVersionToken(%d)" % version)
@@ -26,11 +31,12 @@ class StorageRequestHandler():
             raise Exception("Received 0 length message")
         
     def parsedMessage(self, msgData):
-        header = HashedStorageHeader()
-        header.ParseFromString(msgData)
-        log.msg("parsed message! TODO")
+        signedHeader = HashedStorageHeader()
+        signedHeader.ParseFromString(msgData)
+        log.msg("parsed message! wants to receive %d bytes" % signedHeader.header.length)
         # TODO
+        return signedHeader.header.length
         
         
     def parsedRawBytes(self, bytes): # doesn't have to be implemented by dictionary service
-        pass
+        log.msg("Received %d raw bytes" % len(bytes))

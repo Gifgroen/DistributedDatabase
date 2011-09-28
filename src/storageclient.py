@@ -5,7 +5,7 @@ from struct import pack, unpack
 
 from generic.communication_pb2 import HashedStorageHeader, StorageHeader, StorageResponseHeader
 
-from storage.headerparser import PRIVATE_HASH_KEY # for testing only
+from storage.handler import PRIVATE_HASH_KEY # for testing only
 
 HOST = 'localhost'    # The remote host
 PORT = 8989           # The same port as used by the server

@@ -81,7 +81,7 @@ class BinaryMessageProtocol(Protocol):
     """
     def connectionMade(self):
         self.stream = ByteStream()
-        self.parser = Parser(self.factory.handlerClass(self.factory))
+        self.parser = Parser(self.factory.handlerClass(self))
         
         self.factory.connections.append(self)
         log.msg('New connection, total activive connections: %d' % len(self.factory.connections))
@@ -120,3 +120,5 @@ class BinaryMessageProtocol(Protocol):
         self.writeRaw(pack(STRUCT_BYTE, len(msgData)))
         log.msg('Send protoBufMsg of length %d to client.' % len(msgData))
         self.writeRaw(msgData)
+        
+        

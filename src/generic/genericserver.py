@@ -4,8 +4,6 @@ from twisted.python import log
 from twisted.internet import ssl, reactor
 from twisted.internet.protocol import Factory, Protocol
 
-from serverstatemachine import BinaryDataReceiverProtocol
-
 class FixedLengthMessageServer(object):
     
     @staticmethod
