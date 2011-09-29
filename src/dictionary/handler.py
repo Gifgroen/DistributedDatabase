@@ -14,16 +14,6 @@ class DictionaryRequestHandler():
         self.protocol = protocol
         self.delegate = LocationHandler()
 
-    def parsedVersionToken(self, version):
-        log.msg("parsedVersionToken(%d)" % version)
-        if PROTOCOL_VERSION != version:
-            raise Exception("Wrong protocol version")
-
-    def parsedMessageLengthToken(self, length):
-        log.msg("parsedMessageLengthToken(%d)" % length)
-        if length == 0:
-            raise Exception("Received 0 length message")
-
     def parsedMessage(self, msgData):
         requestMessage = HashedStorageHeader()
         requestMessage.ParseFromString(msgData)
