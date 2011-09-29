@@ -52,7 +52,7 @@ class StorageRequestHandler():
         length = header.length
         if opp == StorageHeader.READ:
             log.msg('Parsed READ header,  read operation')
-            self.db.pushRead(header.offset, header.length, self.diskReadFinished, header)
+            self.db.pushRead(header.offset, header.length, self.diskReadFinished)
             return 0 # we don't want to receive any raw data
         elif opp == StorageHeader.WRITE:
             log.msg('Parsed WRITE header, waiting for %d bytes' % length)
@@ -71,17 +71,17 @@ class StorageRequestHandler():
     self.protocol.writeMsg can be called since only one thread
     is allowed to execute this.
     """
-    def diskReadFinished(self, offset, length, data, header):
+    def diskReadFinished(self, offset, length, data):
         log.msg('diskReadFinished: %s...' % data[:30])
-        self._sendACK(header)
+        self._sendACK()
         self.protocol.writeRaw(data)
         
     """
     Send storage acknowledge to client
     """
-    def _sendACK(self, header):
+    def _sendACK(self):
         responseHeader = StorageResponseHeader()
-        copyHeaderData(header, responseHeader.header)
+        copyHeaderData(self.signedHeader.header, responseHeader.header)
         responseHeader.status = StorageResponseHeader.OK
         self.protocol.writeMsg(responseHeader)
         
@@ -110,4 +110,4 @@ class StorageRequestHandler():
             self.db.pushXORWrite(self.currentWriteOffset, bytes)
         self.currentWriteOffset += len(bytes)
         if self.currentWriteOffset == header.offset + header.length:
-            self._sendACK(self.signedHeader.header)
+            self._sendACK()
