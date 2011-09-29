@@ -10,6 +10,18 @@ PROTOCOL_VERSION = 0b1
 PRIVATE_HASH_KEY = "BLABLABLA"
 HASH_EXPIRE_SECONDS = 30
 
+"""
+Helper function to copy the entire header data from
+a given header to another.
+The protobuf python library doesn't support this by
+default?
+"""
+def copyHeaderData(fromHeader, toHeader):
+    toHeader.operation = fromHeader.operation;
+    toHeader.offset = fromHeader.offset;
+    toHeader.length = fromHeader.length;
+    toHeader.requestTimestamp = fromHeader.requestTimestamp;
+    
 
 """
 Request handler for extrnal storage requests, every connection
@@ -71,21 +83,23 @@ class StorageRequestHandler():
     self.protocol.writeMsg can be called since only one thread
     is allowed to execute this.
     """
-    def diskReadFinished(offset, length, data, header):
+    def diskReadFinished(self, offset, length, data, header):
         log.msg('diskReadFinished: %s...' % data[:30])
-        responseHeader = StorageResponseHeader()
+        self._sendACK(header)
+        self.protocol.writeRaw(data)
         
-        # TODO THIS SHOULD BE EASIER........ but header.copyfrom doesn't work
-        responseHeader.header.operation = header.operation;
-        responseHeader.header.offset = header.offset;
-        responseHeader.header.length = header.length;
-        responseHeader.header.requestTimestamp = header.requestTimestamp;
-
+    """
+    Send storage acknowledge to client
+    """
+    def _sendACK(self, header):
+        responseHeader = StorageResponseHeader()
+        copyHeaderData(header, responseHeader.header)
         responseHeader.status = StorageResponseHeader.OK
         self.protocol.writeMsg(responseHeader)
-        self.protocol.writeRaw(data)
-        log.msg('diskReadFinished finished writing')
         
+    """
+    Message received by parser
+    """
     def parsedMessage(self, msgData):
         self.signedHeader = HashedStorageHeader()
         self.signedHeader.ParseFromString(msgData)
@@ -95,11 +109,6 @@ class StorageRequestHandler():
         
     def _sendXORUpdate(self, bytes): # what if is not received by other peer?
         pass # TODO
-        
-    def _writeFinished(self):
-        log.msg('_writeFinished')
-        pass # send ACK to client
-        # must it be sure that XOR-update is processed?
         
     def parsedRawBytes(self, bytes): # doesn't have to be implemented by dictionary service
         log.msg("Received %d raw bytes" % len(bytes))
@@ -113,4 +122,4 @@ class StorageRequestHandler():
             self.db.pushXORWrite(self.currentWriteOffset, bytes)
         self.currentWriteOffset += len(bytes)
         if self.currentWriteOffset == header.offset + header.length:
-            self._writeFinished()#TODO
+            self._sendACK(self.signedHeader.header)
