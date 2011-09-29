@@ -51,7 +51,8 @@ class StorageDatabase(object):
     and length, and the data.
     """
     def pushRead(self, offset, length, callback, *args):
-        self.work_queue.put(('r', offset, length, callback, args))
+        self.work_queue.put((self._handleRead,
+            offset, length, callback, args))
     
     """
     Queue write request.
@@ -59,16 +60,30 @@ class StorageDatabase(object):
     the offset to disk.
     """
     def pushWrite(self, offset, data):
-        self.work_queue.put(('w', offset, data))
+        self.work_queue.put((self._handleWrite, offset, data))
 
     """
     Queue XOR write request.
     This method writes all the data starting from
     the offset to disk and XOR-es it with the current data.
+    This method is only used by RAID4 parity server
+    P' = I XOR P.
     """
     def pushXORWrite(self, offset, data):
-        self.work_queue.put(('x', offset, data))
+        self.work_queue.put((self._handleXORWrite, offset, data))
         
+    """
+    Queue XOR read request.
+    This method reads all the from disk from offset
+    to len(data) and XOR-es it with the data that
+    is passed to the function.
+    This method is used by the write server to send the
+    XOR-update to the parity server. I = A' XOR A
+    """
+    def pushXORRead(self, offset, data, callback, *args):
+        self.work_queue.put((self._handleXORRead,
+            offset, data, callback, args))
+    
     """
     Blocking request (with timeout) that tries to
     perform a piece of work that is inside the que.
@@ -76,12 +91,7 @@ class StorageDatabase(object):
     def _handleOneRequest(self):
         try: # blocking for 1 second, after this Empty is thrown
             task = self.work_queue.get(True, 1)
-            if task[0] == 'r':
-                self._handleRead(*task[1:])
-            elif task[0] == 'w':
-                self._handleWrite(*task[1:])
-            elif task[0] == 'x':
-                self._handleXORWrite(*task[1:])
+            task[0](*task[1:])
         except Empty:
             return
         
@@ -108,6 +118,15 @@ class StorageDatabase(object):
         original = self.dbFile.read(len(data))
         self.dbFile.seek(offset)
         self.dbFile.write(xorBytes(data, original))
+
+    """
+    Handle read operation
+    """
+    def _handleXORRead(self, offset, data, callback, args):
+        self.dbFile.seek(offset)
+        ondisk = self.dbFile.read(len(data))
+        xored = xorBytes(ondisk, data)
+        reactor.callFromThread(callback, offset, data, xored, *args)
     
     """
     Worker function that continues working until

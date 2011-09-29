@@ -110,4 +110,5 @@ class StorageRequestHandler():
             self.db.pushXORWrite(self.currentWriteOffset, bytes)
         self.currentWriteOffset += len(bytes)
         if self.currentWriteOffset == header.offset + header.length:
+            # TODO notify dictionary service that item is written
             self._sendACK()
