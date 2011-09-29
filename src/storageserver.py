@@ -17,7 +17,7 @@ class StorageServer(FixedLengthMessageServer):
         self.factory.db.start()
         self.factory.handlerClass = StorageRequestHandler
         self.factory.protocol = BinaryMessageProtocol
-
+        self.factory.protocolVersion = 0b1
 
 if __name__ == '__main__':
     

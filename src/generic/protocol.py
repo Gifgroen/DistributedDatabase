@@ -81,7 +81,7 @@ class BinaryMessageProtocol(Protocol):
     """
     def connectionMade(self):
         self.stream = ByteStream()
-        self.parser = Parser(self.factory.handlerClass(self))
+        self.parser = Parser(self)
         
         self.factory.connections.append(self)
         log.msg('New connection, total activive connections: %d' % len(self.factory.connections))

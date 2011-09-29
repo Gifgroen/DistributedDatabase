@@ -5,8 +5,6 @@ from twisted.python import log
 from hashlib import sha1
 import time
 
-PROTOCOL_VERSION = 0b1
-
 PRIVATE_HASH_KEY = "BLABLABLA"
 HASH_EXPIRE_SECONDS = 30
 
@@ -36,16 +34,6 @@ class StorageRequestHandler():
         self.db = protocol.factory.db
         self.signedHeader = None
         self.currentWriteOffset = 0
-        
-    def parsedVersionToken(self, version):
-        log.msg("parsedVersionToken(%d)" % version)
-        if PROTOCOL_VERSION != version:
-            raise Exception("Wrong protocol version")
-        
-    def parsedMessageLengthToken(self, length):
-        log.msg("parsedMessageLengthToken(%d)" % length)
-        if length == 0:
-            raise Exception("Received 0 length message")
             
     def _validateHash(self):
         if self.signedHeader.hashAlgorithm != HashedStorageHeader.SHA1:
