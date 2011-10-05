@@ -73,22 +73,24 @@ def sendDELETERequest(ssl_sock, offset, length):
 
 
 if __name__ == '__main__':
-    print 'Creating socket'
+    print 'Creating socket \n'
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ssl_sock = ssl.wrap_socket(s, ca_certs="sslcert/cert.pem", cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_SSLv23)
 
-    print 'Connecting'
+    print 'Connecting \n'
     ssl_sock.connect((HOST, PORT))
     # protocol version
     ssl_sock.send(pack(STRUCT_BYTE, 0b1))    
 
-    data = "HELLO WORLD!!!!!11one"
+    data = "EEN HELE LANGE STRING MET DATA DIE OVER EEN LIJNTJE GAAT> HOPEN DAT IE NIET TE LANG IS!!!!!!!!!!!111one"
     
     sendADDRequest(ssl_sock, 0, data)
     response1 = readResponse(ssl_sock)
+    print "RESPONSE: ", response1, "\n"
 
     sendGETRequest(ssl_sock, 0, len(data))
     response2 = readResponse(ssl_sock)
+    print "RESPONSE: ", response2
     
     ssl_sock.close();
     print 'closed'

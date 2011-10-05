@@ -31,15 +31,15 @@ class LocationHandler:
         response -> Location message (WRITE)
     """
     def handleADD(self):
-        # look in freelist and set in filetable
+        # TODO: look in freelist and set in filetable
 
         rhead = DictionaryResponseHeader()
         
-        # How to set message ...?
+        # TODO: Build proper response
         print dir(rhead.headers)
-        rhead.headers = self.requestHeader
-        rhead.hosts = "localhost"
-        rhead = 4242
+        rhead.headers.extend([self.requestHeader])
+        rhead.hosts.append("localhost")
+        rhead.ports.append(4242)
 
         return rhead
 
@@ -50,13 +50,13 @@ class LocationHandler:
         -> response: OK message
     """
     def handleDELETE(self):
-        # delete from filetable and release in freelist
+        # TODO: delete from filetable and release in freelist
 
-        # How to set message ...?
+        # TODO: Build proper response
         rhead = DictionaryResponseHeader()
-        rhead.headers = self.requestHeader
-        rhead = "localhost"
-        rhead = 4242
+        rhead.headers.extend([self.requestHeader])
+        rhead.hosts.append("localhost")
+        rhead.ports.append(4242)
 
         return rhead
 
@@ -67,12 +67,12 @@ class LocationHandler:
         response -> Location message (READ)
     """
     def handleGET(self):
-        # get location from filetable
+        # TODO: get location from filetable
 
-        # How to set message ...?
+        # TODO: Build proper response
         rhead = DictionaryResponseHeader()
-        rhead = self.requestHeader
-        rhead = "localhost"
-        rhead = 4242
+        rhead.headers.extend([self.requestHeader])
+        rhead.hosts.append("localhost")
+        rhead.ports.append(4242)
         
         return rhead
