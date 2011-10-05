@@ -4,14 +4,25 @@ The dictionary action delegate responsible for handling actual requests
 All request messages return en LocationResponseHeader message
 -> See layout in communication.proto
 """
-from generic.communication_pb2 import DictionaryReponseHeader
+from generic.communication_pb2 import DictionaryResponseHeader, HashedStorageHeader, StorageHeader
+from dictionary.filetable import DictionaryTable
 
 class LocationHandler:
     def __init__(self):
-        pass
+        self.requestHeader = None
+        self.filetable = DictionaryTable()
 
     def handleRequest(self, dictResponse):
-        pass
+        self.requestHeader = dictResponse
+
+        rmsg = None
+        if self.requestHeader.header.operation == StorageHeader.READ:
+            rmsg = self.handleGET()
+        elif self.requestHeader.header.operation == StorageHeader.WRITE:
+            rmsg = self.handleADD()
+        else:
+            rmsg = self.handleDELETE()
+        return rmsg
 
     """
     Handle ADD request
@@ -19,8 +30,18 @@ class LocationHandler:
         action   -> ADD entry in filetable
         response -> Location message (WRITE)
     """
-    def handleAdd():
-        pass
+    def handleADD(self):
+        # look in freelist and set in filetable
+
+        rhead = DictionaryResponseHeader()
+        
+        # How to set message ...?
+        print dir(rhead.headers)
+        rhead.headers = self.requestHeader
+        rhead.hosts = "localhost"
+        rhead = 4242
+
+        return rhead
 
     """
     Handle DELETE request
@@ -28,8 +49,16 @@ class LocationHandler:
         -> action: delete entry in filetable
         -> response: OK message
     """
-    def handleDelete():
-        pass
+    def handleDELETE(self):
+        # delete from filetable and release in freelist
+
+        # How to set message ...?
+        rhead = DictionaryResponseHeader()
+        rhead.headers = self.requestHeader
+        rhead = "localhost"
+        rhead = 4242
+
+        return rhead
 
     """
     Handle GET request
@@ -37,5 +66,13 @@ class LocationHandler:
         action   -> search filetable for key entry
         response -> Location message (READ)
     """
-    def handleGet():
-        pass
+    def handleGET(self):
+        # get location from filetable
+
+        # How to set message ...?
+        rhead = DictionaryResponseHeader()
+        rhead = self.requestHeader
+        rhead = "localhost"
+        rhead = 4242
+        
+        return rhead

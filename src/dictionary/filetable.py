@@ -15,14 +15,14 @@ class DictionaryTable(object):
 		@return: the reference location under which the data is stored
 	"""
 	def add(self, sizeOfData):
-		pass
+		print "ADD"
 
 	"""
 	Get a location from the locationDict
 		@return: the location of the StorageServer that has the requested data
 	"""
 	def get(self, key):
-		pass
+		print "GET"
 	
 	"""
 	Delete an entry (or key) from the location table. 
@@ -30,4 +30,4 @@ class DictionaryTable(object):
 		@return an acknowledgement message (OK, FAIL, ...)
 	"""
 	def delete(self, key):
-		pass
+		print "DELETE"

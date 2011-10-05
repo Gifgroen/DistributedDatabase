@@ -1,4 +1,4 @@
-from generic.communication_pb2 import DictionaryReponseHeader # Dictheaders
+from generic.communication_pb2 import DictionaryResponseHeader, HashedStorageHeader # Dictheaders
 
 from twisted.python import log
 
@@ -22,4 +22,5 @@ class DictionaryRequestHandler():
         log.msg("parsed message!")
 
         # TODO -> delegate request
-        self.delegate.handleRequest(requestMessage)
+        msg = self.delegate.handleRequest(requestMessage)
+        self.protocol.writeMsg(msg)
