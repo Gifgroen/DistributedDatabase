@@ -43,8 +43,8 @@ message DictionaryResponseHeader {
 
 message DataLocation {
     required HashedStorageHeader header = 1;
-    required uint64 ports = 2;
-    required string hosts = 3;
+    required uint64 port = 2;
+    required string host = 3;
 }
 
 message DictionaryHeader {
