@@ -2,12 +2,12 @@ option optimize_for = LITE_RUNTIME;
 
 
 message HashedStorageHeader {
-	enum HashAlgorithm {
-		SHA1 = 1;
-	}
-	required HashAlgorithm hashAlgorithm = 1;
-	required bytes hash = 2;
-	required StorageHeader header = 3;
+    enum HashAlgorithm {
+	SHA1 = 1;
+    }
+    required HashAlgorithm hashAlgorithm = 1;
+    required bytes hash = 2;
+    required StorageHeader header = 3;
 }
 
 message StorageHeader {
@@ -16,34 +16,43 @@ message StorageHeader {
         WRITE = 2;
         XOR_WRITE = 3;
     }
-	required Operation operation = 1;
-	required uint64 offset = 2;
-	required uint64 length = 3;
-	required uint64 requestTimestamp = 4;
+    required Operation operation = 1;
+    required uint64 offset = 2;
+    required uint64 length = 3;
+    required uint64 requestTimestamp = 4;
 }
 
 message StorageResponseHeader {
-	enum Status {
-		OK = 1;
-		ERROR = 2;
-	}
-	required Status status = 1;
-	required StorageHeader header = 2;
+    enum Status {
+	OK = 1;
+	ERROR = 2;
+    }
+    required Status status = 1;
+    required StorageHeader header = 2;
 }
 
 message DictionaryResponseHeader {
-    repeated HashedStorageHeader headers = 1;
-    repeated string hosts = 3;
-    repeated uint64 ports = 2;
+    enum Status {
+    	OK = 1;
+	NO_FREE_SPACE = 2;
+    }
+    required Status status = 1;
+    repeated DataLocation locations = 2;
+}
+
+message DataLocation {
+    required HashedStorageHeader headers = 1;
+    required uint64 ports = 2;
+    required string hosts = 3;
 }
 
 message DictionaryHeader {
-	enum Operation {
-		GET = 1;
-		ADD = 2;
-		DELETE = 3;
-	}
-	required Operation operation = 1;
-	optional string key = 2;
-	optional uint64 size = 3;
+    enum Operation {
+	GET = 1;
+	ADD = 2;
+	DELETE = 3;
+    }
+    required Operation operation = 1;
+    optional string key = 2;
+    optional uint64 size = 3;
 }
