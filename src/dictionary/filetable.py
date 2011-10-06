@@ -9,26 +9,33 @@ class DictionaryTable(object):
     """
     def __init__(self):
 	# key -> [tableentrie]
-    self.locationDict = {}
+    	self.locationDict = {}
 
     """
     Add an entry in the DictionaryTable
-	    @return: the reference location under which the data is stored
+	@return: the reference location under which the data is stored
     """
     def add(self, sizeOfData):
-	    print "ADD"
+	# get space from freelist
+	key = "randKey"
+	print type(sizeOfData)
+	self.locationDict[key] = LocationEntry("localhost", 4242, 0, sizeOfData) 
+	# TODO return location
+	return key
 
     """
     Get a location from the locationDict
-	    @return: the location of the StorageServer that has the requested data
+	@return: the location of the StorageServer that has the requested data
     """
     def get(self, key):
-	    print "GET"
+	if key in self.locationDict:
+	    return self.locationDict[key]
+	return None
     
     """
     Delete an entry (or key) from the location table. 
     The deletion of this key -> location pair throws away the pointer to the key.
-	    @return an acknowledgement message (OK, FAIL, ...)
+	@return an acknowledgement message (OK, FAIL, ...)
     """
     def delete(self, key):
-	    print "DELETE"
+	print "DELETE"

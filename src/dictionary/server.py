@@ -4,7 +4,7 @@ The dictionary action delegate responsible for handling actual requests
 All request messages return en LocationResponseHeader message
 -> See layout in communication.proto
 """
-from generic.communication_pb2 import DictionaryResponseHeader, HashedStorageHeader, StorageHeader, DictionaryHeader
+from generic.communication_pb2 import DictionaryResponseHeader, DictionaryHeader
 from dictionary.filetable import DictionaryTable
 
 class LocationHandler:
@@ -15,14 +15,12 @@ class LocationHandler:
     def handleRequest(self, header):
         self.requestHeader = header
 
-        rmsg = None
         if self.requestHeader.operation == DictionaryHeader.GET:
-            rmsg = self.handleGET()
+            return self.handleGET()
         elif self.requestHeader.operation == DictionaryHeader.ADD:
-            rmsg = self.handleADD()
+            return self.handleADD()
         elif self.requestHeader.operation == DictionaryHeader.DELETE:
-            rmsg = self.handleDELETE()
-        return rmsg
+            return self.handleDELETE()
 
     """
     Handle GET request
@@ -31,13 +29,16 @@ class LocationHandler:
         response -> Location message (READ)
     """
     def handleGET(self):
-        locs = self.filetable.get(self.request.key)
-        
-        for loc in locs:
-            if loc:
-                pass
-            
-        # TODO: Build proper response
+        locs = self.filetable.get(self.requestHeader.key)
+
+        rhead = DictionaryResponseHeader()
+        if not locs:
+            rhead.status = DictionaryResponseHeader.NOT_EXISTING_KEY
+        else:
+            rhead.status = DictionaryResponseHeader.OK
+            for loc in locs:
+                rhead.locations.extend([loc.toReadMessage()])
+        return rhead
 
     """
     Handle ADD request
@@ -46,6 +47,14 @@ class LocationHandler:
         response -> Location message (WRITE)
     """
     def handleADD(self):
+        key = self.filetable.add(self.requestHeader.size)
+        
+        rhead = DictionaryResponseHeader()
+        rhead.status = DictionaryResponseHeader.OK
+        rhead.key = key
+        rhead.locations.extend([])
+
+        return rhead
         # TODO: look in freelist and set in filetable
 
         # TODO: Build proper response
@@ -57,6 +66,7 @@ class LocationHandler:
         -> response: OK message
     """
     def handleDELETE(self):
+        pass
         # TODO: delete from filetable and release in freelist
 
         # TODO: Build proper response

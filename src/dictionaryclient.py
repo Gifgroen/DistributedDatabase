@@ -3,7 +3,7 @@ import sys, ssl, socket, time
 from hashlib import sha1
 from struct import pack, unpack
 
-from generic.communication_pb2 import HashedStorageHeader, StorageHeader, DictionaryHeader
+from generic.communication_pb2 import HashedStorageHeader, StorageHeader, DictionaryHeader, DictionaryResponseHeader
 
 from storage.handler import PRIVATE_HASH_KEY # for testing only
 
@@ -37,16 +37,14 @@ def sendMsg(ssl_sock, msg):
     ssl_sock.send(pack(STRUCT_BYTE, len(msgData)))
     ssl_sock.send(msgData)
 
-
-def createRequestHeader(operation, offset, length):
-    rhead = HashedStorageHeader()
-    rhead.header.operation = operation
-    rhead.header.offset = offset
-    rhead.header.length = length
-    sign(rhead)
+"""
+def createRequestHeader(operation, key):
+    rhead = DictionaryHeader()
+    rhead.key = key
+    rhead.operation = operation
 
     return rhead
-
+"""
 def readResponse(ssl_sock):
     responseHeaderLength = unpack(STRUCT_BYTE, readNBytes(ssl_sock, 1))[0]
     responseHeaderData = readNBytes(ssl_sock, responseHeaderLength)
@@ -56,20 +54,20 @@ def readResponse(ssl_sock):
 
     return responseHeader
 
-def sendADDRequest(ssl_sock, offset, data):
+def sendADDRequest(ssl_sock, head):
     # construct ADD message
-    rhead = createRequestHeader(DictionaryHeader.WRITE, offset, len(data))
-    sendMsg(ssl_sock, rhead)
+    #rhead = createRequestHeader(DictionaryHeader.ADD, size)
+    sendMsg(ssl_sock, head)
 
-def sendGETRequest(ssl_sock, offset, length):
+def sendGETRequest(ssl_sock, head):
     # construct GET message
-    rhead = createRequestHeader(DictionaryHeader.READ, offset, length)
-    sendMsg(ssl_sock, rhead)
+    #rhead = createRequestHeader(DictionaryHeader.GET, key)
+    sendMsg(ssl_sock, head)
 
 
-def sendDELETERequest(ssl_sock, offset, length):
+def sendDELETERequest(ssl_sock, key):
     # construct DELETE message
-    rhead = createRequestHeader(DictionaryHeader.DELETE, offset, len(data))
+    rhead = createRequestHeader(DictionaryHeader.DELETE, key)
     sendMsg(ssl_sock, rhead)
 
 
@@ -83,19 +81,23 @@ if __name__ == '__main__':
     # protocol version
     ssl_sock.send(pack(STRUCT_BYTE, 0b1))    
 
-    data = "EEN HELE LANGE STRING MET DATA DIE OVER EEN LIJNTJE GAAT> HOPEN DAT IE NIET TE LANG IS!!!!!!!!!!!111one"
+    key = "randKey"
     
-    sendADDRequest(ssl_sock, 0, data)
+    rhead = DictionaryHeader()
+    rhead.size = 1337
+    rhead.operation = DictionaryHeader.ADD
+    sendADDRequest(ssl_sock, rhead)
+    response1 = readResponse(ssl_sock)
+    print "RESPONSE: ", response1, "\n"
+    
+    
+    rhead2 = DictionaryHeader()
+    rhead2.key = key
+    rhead2.operation = DictionaryHeader.GET
+    sendGETRequest(ssl_sock, rhead2)
     response1 = readResponse(ssl_sock)
     print "RESPONSE: ", response1, "\n"
 
-    sendGETRequest(ssl_sock, 0, len(data))
-    response2 = readResponse(ssl_sock)
-    print "RESPONSE: ", response2
-    
-    sendDELETERequest(ssl_sock, 0, len(data))
-    response3 = readResponse(ssl_sock)
-    print "RESPONSE: ", response3
     
     ssl_sock.close();
     print 'closed'

@@ -39,6 +39,7 @@ message DictionaryResponseHeader {
     }
     required Status status = 1;
     repeated DataLocation locations = 2;
+    optional string key = 3;
 }
 
 message DataLocation {

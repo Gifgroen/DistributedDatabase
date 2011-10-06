@@ -1,3 +1,7 @@
+from generic.communication_pb2 import DataLocation, StorageHeader
+from storageclient import sign
+from storage.handler import copyHeaderData
+
 """
 An entry in the dictionaryTable
 """
@@ -5,16 +9,27 @@ class LocationEntry(object):
 	"""
 	An entry is initialized with a key and a location where the data is stored
 	"""
-	def __init__(self, key, location):
-	    self.offset = 0
-	    self.length = 0
-	    self.host = 0
-	    self.port = 0
+	def __init__(self, host, port, offset, length):
 	    self.isWritten = False
-	    self.location = str(location)
+
+	    self.dataLocation = DataLocation()
+	    self.dataLocation.host = host
+	    self.dataLocation.port = port
+
+	    self.dataLocation.header.header.offset = offset
+	    self.dataLocation.header.header.length = length
 
 	def __repr__(self):
-		return self.key, " -> ", self.location
+	    return self.key, " -> ", self.location
 
-	def getStorageHeader(self):
-		pass
+	def toWriteMessage(self):
+	    self.signedHeader.header.operation = StorageHeader.WRITE
+	    return self._toDataLocationMessage()
+	    
+	def toReadMessage(self):
+	    self.signedHeader.header.operation = StorageHeader.READ
+	    return self._toDataLocationMessage()
+
+	def _toDataLocationMessage(self):
+	    sign(self.dataLocation)
+	    return self.dataLocation
