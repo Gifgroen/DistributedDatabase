@@ -18,9 +18,8 @@ class DictionaryTable(object):
     def add(self, sizeOfData):
         # get space from freelist
         key = "randKey"
-        print 'add', type(sizeOfData), key
-        self.locationDict[key] = LocationEntry("localhost", 4242, 0, sizeOfData) 
-        print self.locationDict
+        self.locationDict[key] = LocationEntry("localhost", 4242, 0, sizeOfData)
+
         # TODO return location
         return key
 
@@ -31,8 +30,7 @@ class DictionaryTable(object):
     def get(self, key):
         print 'get', key, self.locationDict
         if key in self.locationDict:
-            print 'bla'
-            return self.locationDict[key]
+            return [self.locationDict[key]]
         return None
     
     """
@@ -41,4 +39,6 @@ class DictionaryTable(object):
 	@return an acknowledgement message (OK, FAIL, ...)
     """
     def delete(self, key):
-    	print "DELETE"
+        # TODO: Create Notification message and notify freelist
+        if key in self.locationDict:
+            self.locationDict.remove(key)

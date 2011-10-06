@@ -37,14 +37,7 @@ def sendMsg(ssl_sock, msg):
     ssl_sock.send(pack(STRUCT_BYTE, len(msgData)))
     ssl_sock.send(msgData)
 
-"""
-def createRequestHeader(operation, key):
-    rhead = DictionaryHeader()
-    rhead.key = key
-    rhead.operation = operation
 
-    return rhead
-"""
 def readResponse(ssl_sock):
     responseHeaderLength = unpack(STRUCT_BYTE, readNBytes(ssl_sock, 1))[0]
     responseHeaderData = readNBytes(ssl_sock, responseHeaderLength)
@@ -55,13 +48,11 @@ def readResponse(ssl_sock):
     return responseHeader
 
 def sendADDRequest(ssl_sock, head):
-    # construct ADD message
-    #rhead = createRequestHeader(DictionaryHeader.ADD, size)
+    # send ADD message
     sendMsg(ssl_sock, head)
 
 def sendGETRequest(ssl_sock, head):
-    # construct GET message
-    #rhead = createRequestHeader(DictionaryHeader.GET, key)
+    # send GET message
     sendMsg(ssl_sock, head)
 
 
@@ -79,25 +70,21 @@ if __name__ == '__main__':
     print 'Connecting \n'
     ssl_sock.connect((HOST, PORT))
     # protocol version
-    ssl_sock.send(pack(STRUCT_BYTE, 0b1))    
-
-    #key = "randKey"
+    ssl_sock.send(pack(STRUCT_BYTE, 0b1))
     
     rhead = DictionaryHeader()
     rhead.size = 1337
     rhead.operation = DictionaryHeader.ADD
     sendADDRequest(ssl_sock, rhead)
     response1 = readResponse(ssl_sock)
-    print "RESPONSE: ", response1, "\n"
-    
-    print "key", response1.key
-    
+    print "ADD RESPONSE: ", response1, "\n"
+
     rhead2 = DictionaryHeader()
     rhead2.key = response1.key
     rhead2.operation = DictionaryHeader.GET
     sendGETRequest(ssl_sock, rhead2)
     response1 = readResponse(ssl_sock)
-    print "RESPONSE: ", response1, "\n"
+    print "GET RESPONSE: ", response1, "\n"
 
     
     ssl_sock.close();

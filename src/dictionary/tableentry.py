@@ -23,13 +23,13 @@ class LocationEntry(object):
 	    return '%s %s' % (self.dataLocation, self.isWritten)
 
 	def toWriteMessage(self):
-	    self.signedHeader.header.operation = StorageHeader.WRITE
+	    self.dataLocation.header.header.operation = StorageHeader.WRITE
 	    return self._toDataLocationMessage()
 	    
 	def toReadMessage(self):
-	    self.signedHeader.header.operation = StorageHeader.READ
+	    self.dataLocation.header.header.operation = StorageHeader.READ
 	    return self._toDataLocationMessage()
 
 	def _toDataLocationMessage(self):
-	    sign(self.dataLocation)
+	    sign(self.dataLocation.header)
 	    return self.dataLocation
