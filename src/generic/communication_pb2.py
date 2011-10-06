@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='communication.proto',
   package='',
-  serialized_pb='\n\x13\x63ommunication.proto\"\x99\x01\n\x13HashedStorageHeader\x12\x39\n\rhashAlgorithm\x18\x01 \x02(\x0e\x32\".HashedStorageHeader.HashAlgorithm\x12\x0c\n\x04hash\x18\x02 \x02(\x0c\x12\x1e\n\x06header\x18\x03 \x02(\x0b\x32\x0e.StorageHeader\"\x19\n\rHashAlgorithm\x12\x08\n\x04SHA1\x10\x01\"\xa7\x01\n\rStorageHeader\x12+\n\toperation\x18\x01 \x02(\x0e\x32\x18.StorageHeader.Operation\x12\x0e\n\x06offset\x18\x02 \x02(\x04\x12\x0e\n\x06length\x18\x03 \x02(\x04\x12\x18\n\x10requestTimestamp\x18\x04 \x02(\x04\"/\n\tOperation\x12\x08\n\x04READ\x10\x01\x12\t\n\x05WRITE\x10\x02\x12\r\n\tXOR_WRITE\x10\x03\"\x83\x01\n\x15StorageResponseHeader\x12-\n\x06status\x18\x01 \x02(\x0e\x32\x1d.StorageResponseHeader.Status\x12\x1e\n\x06header\x18\x02 \x02(\x0b\x32\x0e.StorageHeader\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\x93\x01\n\x18\x44ictionaryResponseHeader\x12\x30\n\x06status\x18\x01 \x02(\x0e\x32 .DictionaryResponseHeader.Status\x12 \n\tlocations\x18\x02 \x03(\x0b\x32\r.DataLocation\"#\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\x11\n\rNO_FREE_SPACE\x10\x02\"S\n\x0c\x44\x61taLocation\x12%\n\x07headers\x18\x01 \x02(\x0b\x32\x14.HashedStorageHeader\x12\r\n\x05ports\x18\x02 \x02(\x04\x12\r\n\x05hosts\x18\x03 \x02(\t\"\x88\x01\n\x10\x44ictionaryHeader\x12.\n\toperation\x18\x01 \x02(\x0e\x32\x1b.DictionaryHeader.Operation\x12\x0b\n\x03key\x18\x02 \x01(\t\x12\x0c\n\x04size\x18\x03 \x01(\x04\")\n\tOperation\x12\x07\n\x03GET\x10\x01\x12\x07\n\x03\x41\x44\x44\x10\x02\x12\n\n\x06\x44\x45LETE\x10\x03\x42\x02H\x03')
+  serialized_pb='\n\x13\x63ommunication.proto\"\x99\x01\n\x13HashedStorageHeader\x12\x39\n\rhashAlgorithm\x18\x01 \x02(\x0e\x32\".HashedStorageHeader.HashAlgorithm\x12\x0c\n\x04hash\x18\x02 \x02(\x0c\x12\x1e\n\x06header\x18\x03 \x02(\x0b\x32\x0e.StorageHeader\"\x19\n\rHashAlgorithm\x12\x08\n\x04SHA1\x10\x01\"\xa7\x01\n\rStorageHeader\x12+\n\toperation\x18\x01 \x02(\x0e\x32\x18.StorageHeader.Operation\x12\x0e\n\x06offset\x18\x02 \x02(\x04\x12\x0e\n\x06length\x18\x03 \x02(\x04\x12\x18\n\x10requestTimestamp\x18\x04 \x02(\x04\"/\n\tOperation\x12\x08\n\x04READ\x10\x01\x12\t\n\x05WRITE\x10\x02\x12\r\n\tXOR_WRITE\x10\x03\"\x83\x01\n\x15StorageResponseHeader\x12-\n\x06status\x18\x01 \x02(\x0e\x32\x1d.StorageResponseHeader.Status\x12\x1e\n\x06header\x18\x02 \x02(\x0b\x32\x0e.StorageHeader\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\xa9\x01\n\x18\x44ictionaryResponseHeader\x12\x30\n\x06status\x18\x01 \x02(\x0e\x32 .DictionaryResponseHeader.Status\x12 \n\tlocations\x18\x02 \x03(\x0b\x32\r.DataLocation\"9\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\x11\n\rNO_FREE_SPACE\x10\x02\x12\x14\n\x10NOT_EXISTING_KEY\x10\x03\"R\n\x0c\x44\x61taLocation\x12$\n\x06header\x18\x01 \x02(\x0b\x32\x14.HashedStorageHeader\x12\r\n\x05ports\x18\x02 \x02(\x04\x12\r\n\x05hosts\x18\x03 \x02(\t\"\x88\x01\n\x10\x44ictionaryHeader\x12.\n\toperation\x18\x01 \x02(\x0e\x32\x1b.DictionaryHeader.Operation\x12\x0b\n\x03key\x18\x02 \x01(\t\x12\x0c\n\x04size\x18\x03 \x01(\x04\")\n\tOperation\x12\x07\n\x03GET\x10\x01\x12\x07\n\x03\x41\x44\x44\x10\x02\x12\n\n\x06\x44\x45LETE\x10\x03\x42\x02H\x03')
 
 
 
@@ -92,11 +92,15 @@ _DICTIONARYRESPONSEHEADER_STATUS = descriptor.EnumDescriptor(
       name='NO_FREE_SPACE', index=1, number=2,
       options=None,
       type=None),
+    descriptor.EnumValueDescriptor(
+      name='NOT_EXISTING_KEY', index=2, number=3,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
   serialized_start=596,
-  serialized_end=631,
+  serialized_end=653,
 )
 
 _DICTIONARYHEADER_OPERATION = descriptor.EnumDescriptor(
@@ -120,8 +124,8 @@ _DICTIONARYHEADER_OPERATION = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=814,
-  serialized_end=855,
+  serialized_start=835,
+  serialized_end=876,
 )
 
 
@@ -286,7 +290,7 @@ _DICTIONARYRESPONSEHEADER = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=484,
-  serialized_end=631,
+  serialized_end=653,
 )
 
 
@@ -298,7 +302,7 @@ _DATALOCATION = descriptor.Descriptor(
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='headers', full_name='DataLocation.headers', index=0,
+      name='header', full_name='DataLocation.header', index=0,
       number=1, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -327,8 +331,8 @@ _DATALOCATION = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=633,
-  serialized_end=716,
+  serialized_start=655,
+  serialized_end=737,
 )
 
 
@@ -370,8 +374,8 @@ _DICTIONARYHEADER = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=719,
-  serialized_end=855,
+  serialized_start=740,
+  serialized_end=876,
 )
 
 _HASHEDSTORAGEHEADER.fields_by_name['hashAlgorithm'].enum_type = _HASHEDSTORAGEHEADER_HASHALGORITHM
@@ -385,7 +389,7 @@ _STORAGERESPONSEHEADER_STATUS.containing_type = _STORAGERESPONSEHEADER;
 _DICTIONARYRESPONSEHEADER.fields_by_name['status'].enum_type = _DICTIONARYRESPONSEHEADER_STATUS
 _DICTIONARYRESPONSEHEADER.fields_by_name['locations'].message_type = _DATALOCATION
 _DICTIONARYRESPONSEHEADER_STATUS.containing_type = _DICTIONARYRESPONSEHEADER;
-_DATALOCATION.fields_by_name['headers'].message_type = _HASHEDSTORAGEHEADER
+_DATALOCATION.fields_by_name['header'].message_type = _HASHEDSTORAGEHEADER
 _DICTIONARYHEADER.fields_by_name['operation'].enum_type = _DICTIONARYHEADER_OPERATION
 _DICTIONARYHEADER_OPERATION.containing_type = _DICTIONARYHEADER;
 DESCRIPTOR.message_types_by_name['HashedStorageHeader'] = _HASHEDSTORAGEHEADER
