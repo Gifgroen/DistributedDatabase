@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # protocol version
     ssl_sock.send(pack(STRUCT_BYTE, 0b1))    
 
-    key = "randKey"
+    #key = "randKey"
     
     rhead = DictionaryHeader()
     rhead.size = 1337
@@ -90,9 +90,10 @@ if __name__ == '__main__':
     response1 = readResponse(ssl_sock)
     print "RESPONSE: ", response1, "\n"
     
+    print "key", response1.key
     
     rhead2 = DictionaryHeader()
-    rhead2.key = key
+    rhead2.key = response1.key
     rhead2.operation = DictionaryHeader.GET
     sendGETRequest(ssl_sock, rhead2)
     response1 = readResponse(ssl_sock)

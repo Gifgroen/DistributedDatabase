@@ -8,6 +8,7 @@ from generic.genericserver import FixedLengthMessageServer
 from generic.protocol import BinaryMessageProtocol
 
 from dictionary.handler import DictionaryRequestHandler
+from dictionary.server import LocationHandler
 
 
 class DictionaryServer(FixedLengthMessageServer):
@@ -16,6 +17,7 @@ class DictionaryServer(FixedLengthMessageServer):
         self.factory.handlerClass = DictionaryRequestHandler
         self.factory.protocol = BinaryMessageProtocol
         self.factory.protocolVersion = 0b1
+        self.factory.delegate = LocationHandler()
 
 if __name__ == '__main__':
     
