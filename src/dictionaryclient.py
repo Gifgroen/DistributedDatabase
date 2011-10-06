@@ -3,7 +3,7 @@ import sys, ssl, socket, time
 from hashlib import sha1
 from struct import pack, unpack
 
-from generic.communication_pb2 import HashedStorageHeader, StorageHeader, DictionaryResponseHeader
+from generic.communication_pb2 import HashedStorageHeader, StorageHeader, DictionaryHeader
 
 from storage.handler import PRIVATE_HASH_KEY # for testing only
 
@@ -58,18 +58,19 @@ def readResponse(ssl_sock):
 
 def sendADDRequest(ssl_sock, offset, data):
     # construct ADD message
-    rhead = createRequestHeader(StorageHeader.WRITE, offset, len(data))
+    rhead = createRequestHeader(DictionaryHeader.WRITE, offset, len(data))
     sendMsg(ssl_sock, rhead)
 
 def sendGETRequest(ssl_sock, offset, length):
     # construct GET message
-    rhead = createRequestHeader(StorageHeader.READ, offset, length)
+    rhead = createRequestHeader(DictionaryHeader.READ, offset, length)
     sendMsg(ssl_sock, rhead)
 
 
 def sendDELETERequest(ssl_sock, offset, length):
     # construct DELETE message
-    pass # XOR HERE??
+    rhead = createRequestHeader(DictionaryHeader.DELETE, offset, len(data))
+    sendMsg(ssl_sock, rhead)
 
 
 if __name__ == '__main__':
@@ -91,6 +92,10 @@ if __name__ == '__main__':
     sendGETRequest(ssl_sock, 0, len(data))
     response2 = readResponse(ssl_sock)
     print "RESPONSE: ", response2
+    
+    sendDELETERequest(ssl_sock, 0, len(data))
+    response3 = readResponse(ssl_sock)
+    print "RESPONSE: ", response3
     
     ssl_sock.close();
     print 'closed'

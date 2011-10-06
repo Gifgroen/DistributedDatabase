@@ -1,4 +1,4 @@
-from generic.communication_pb2 import DictionaryResponseHeader, HashedStorageHeader # Dictheaders
+from generic.communication_pb2 import DictionaryHeader # Dictheaders
 
 from twisted.python import log
 
@@ -15,7 +15,7 @@ class DictionaryRequestHandler():
         self.delegate = LocationHandler()
 
     def parsedMessage(self, msgData):
-        requestMessage = HashedStorageHeader()
+        requestMessage = DictionaryHeader()
         requestMessage.ParseFromString(msgData)
         
         # TODO: Parse message
