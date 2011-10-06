@@ -8,6 +8,7 @@ class DictionaryTable(object):
 	Create a location table that maps DB keys to a physical location
 	"""
 	def __init__(self):
+	    # key -> [tableentrie]
 		self.locationDict = {}
 
 	"""
