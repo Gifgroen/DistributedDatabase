@@ -4,7 +4,7 @@ The dictionary action delegate responsible for handling actual requests
 All request messages return en LocationResponseHeader message
 -> See layout in communication.proto
 """
-from generic.communication_pb2 import DictionaryResponseHeader, HashedStorageHeader, StorageHeader
+from generic.communication_pb2 import DictionaryResponseHeader, HashedStorageHeader, StorageHeader, DictionaryHeader
 from dictionary.filetable import DictionaryTable
 
 class LocationHandler:
@@ -12,17 +12,32 @@ class LocationHandler:
         self.requestHeader = None
         self.filetable = DictionaryTable()
 
-    def handleRequest(self, dictResponse):
-        self.requestHeader = dictResponse
+    def handleRequest(self, header):
+        self.requestHeader = header
 
         rmsg = None
-        if self.requestHeader.header.operation == StorageHeader.READ:
+        if self.requestHeader.operation == DictionaryHeader.GET:
             rmsg = self.handleGET()
-        elif self.requestHeader.header.operation == StorageHeader.WRITE:
+        elif self.requestHeader.operation == DictionaryHeader.ADD:
             rmsg = self.handleADD()
-        else:
+        elif self.requestHeader.operation == DictionaryHeader.DELETE:
             rmsg = self.handleDELETE()
         return rmsg
+
+    """
+    Handle GET request
+        input    -> key
+        action   -> search filetable for key entry
+        response -> Location message (READ)
+    """
+    def handleGET(self):
+        locs = self.filetable.get(self.request.key)
+        
+        for loc in locs:
+            if loc:
+                pass
+            
+        # TODO: Build proper response
 
     """
     Handle ADD request
@@ -33,15 +48,7 @@ class LocationHandler:
     def handleADD(self):
         # TODO: look in freelist and set in filetable
 
-        rhead = DictionaryResponseHeader()
-        
         # TODO: Build proper response
-        print dir(rhead.headers)
-        rhead.headers.extend([self.requestHeader])
-        rhead.hosts.append("localhost")
-        rhead.ports.append(4242)
-
-        return rhead
 
     """
     Handle DELETE request
@@ -53,26 +60,3 @@ class LocationHandler:
         # TODO: delete from filetable and release in freelist
 
         # TODO: Build proper response
-        rhead = DictionaryResponseHeader()
-        rhead.headers.extend([self.requestHeader])
-        rhead.hosts.append("localhost")
-        rhead.ports.append(4242)
-
-        return rhead
-
-    """
-    Handle GET request
-        input    -> key
-        action   -> search filetable for key entry
-        response -> Location message (READ)
-    """
-    def handleGET(self):
-        # TODO: get location from filetable
-
-        # TODO: Build proper response
-        rhead = DictionaryResponseHeader()
-        rhead.headers.extend([self.requestHeader])
-        rhead.hosts.append("localhost")
-        rhead.ports.append(4242)
-        
-        return rhead
