@@ -35,13 +35,14 @@ message DictionaryResponseHeader {
     enum Status {
         OK = 1;
         NO_FREE_SPACE = 2;
+        NOT_EXISTING_KEY = 3;
     }
     required Status status = 1;
     repeated DataLocation locations = 2;
 }
 
 message DataLocation {
-    required HashedStorageHeader headers = 1;
+    required HashedStorageHeader header = 1;
     required uint64 ports = 2;
     required string hosts = 3;
 }
