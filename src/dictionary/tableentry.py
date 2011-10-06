@@ -20,7 +20,7 @@ class LocationEntry(object):
 	    self.dataLocation.header.header.length = length
 
 	def __repr__(self):
-	    return self.key, " -> ", self.location
+	    return '%s %s' % (self.dataLocation, self.isWritten)
 
 	def toWriteMessage(self):
 	    self.signedHeader.header.operation = StorageHeader.WRITE

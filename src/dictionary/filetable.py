@@ -8,29 +8,32 @@ class DictionaryTable(object):
     Create a location table that maps DB keys to a physical location
     """
     def __init__(self):
-	# key -> [tableentrie]
-    	self.locationDict = {}
+        # key -> [tableentrie]
+        self.locationDict = {}
 
     """
     Add an entry in the DictionaryTable
 	@return: the reference location under which the data is stored
     """
     def add(self, sizeOfData):
-	# get space from freelist
-	key = "randKey"
-	print type(sizeOfData)
-	self.locationDict[key] = LocationEntry("localhost", 4242, 0, sizeOfData) 
-	# TODO return location
-	return key
+        # get space from freelist
+        key = "randKey"
+        print 'add', type(sizeOfData), key
+        self.locationDict[key] = LocationEntry("localhost", 4242, 0, sizeOfData) 
+        print self.locationDict
+        # TODO return location
+        return key
 
     """
     Get a location from the locationDict
 	@return: the location of the StorageServer that has the requested data
     """
     def get(self, key):
-	if key in self.locationDict:
-	    return self.locationDict[key]
-	return None
+        print 'get', key, self.locationDict
+        if key in self.locationDict:
+            print 'bla'
+            return self.locationDict[key]
+        return None
     
     """
     Delete an entry (or key) from the location table. 
@@ -38,4 +41,4 @@ class DictionaryTable(object):
 	@return an acknowledgement message (OK, FAIL, ...)
     """
     def delete(self, key):
-	print "DELETE"
+    	print "DELETE"

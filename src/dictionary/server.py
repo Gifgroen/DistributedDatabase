@@ -29,6 +29,7 @@ class LocationHandler:
         response -> Location message (READ)
     """
     def handleGET(self):
+        print self.requestHeader.key
         locs = self.filetable.get(self.requestHeader.key)
 
         rhead = DictionaryResponseHeader()
