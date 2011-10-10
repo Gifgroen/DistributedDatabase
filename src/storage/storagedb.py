@@ -52,7 +52,7 @@ class StorageDatabase(object):
     and length, and the data.
     """
     def pushRead(self, offset, length, callback, *args):
-        assert offset + len(data) < self.size
+        assert offset + length < self.size
         self.work_queue.put((self._handleRead,
             offset, length, callback, args))
     
