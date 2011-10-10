@@ -1,82 +1,66 @@
 #!/usr/bin/env python
-import sys, ssl, socket
-from struct import pack, unpack
 
+from generic.protobufconnection import BlockingProtoBufConnection
 from generic.communication_pb2 import HashedStorageHeader, StorageHeader, StorageResponseHeader
+
+
 from generic.crypto import signAndTimestampHashedStorageHeader # for testing only
 
 HOST = 'localhost'    # The remote host
 PORT = 8989           # The same port as used by the server
 
-STRUCT_BYTE = "!B"
+"""
+Note: this class does almost nothing with the response
+header data since it is blocking, and everything is send
+and received order.
+"""
+class SimpleStorageTestClient(object):
     
-def sendMsg(ssl_sock, msg):
-    msgData = msg.SerializeToString()
-    assert len(msgData) < 256
-    ssl_sock.send(pack(STRUCT_BYTE, len(msgData)))
-    ssl_sock.send(msgData)
-
-def sendWriteRequest(ssl_sock, offset, data):
-    # construct message
-    msg = HashedStorageHeader()
-    msg.header.operation = StorageHeader.WRITE
-    msg.header.offset = offset
-    msg.header.length = len(data)
-    signAndTimestampHashedStorageHeader(msg)
-    
-    sendMsg(ssl_sock, msg)
-    
-    ssl_sock.send(data)
-
-def sendReadRequest(ssl_sock, offset, length):
-    msg = HashedStorageHeader()
-    msg.header.operation = StorageHeader.READ
-    msg.header.offset = offset
-    msg.header.length = length
-    signAndTimestampHashedStorageHeader(msg)
-    sendMsg(ssl_sock, msg)
-    
-
-def readNBytes(ssl_sock, numBytes):
-    print 'read %d bytes' % numBytes
-    msgData = ''
-    while len(msgData) != numBytes:
-        restLength = numBytes - len(msgData)
-        received = ssl_sock.read(restLength)
-        msgData = msgData + received
-    return msgData
-
-def readResponse(ssl_sock):
-    responseHeaderLength = unpack(STRUCT_BYTE, readNBytes(ssl_sock, 1))[0]
-    responseHeaderData = readNBytes(ssl_sock, responseHeaderLength)
-    print len(responseHeaderData)
-    responseHeader = StorageResponseHeader()
-    responseHeader.ParseFromString(responseHeaderData)
-    if responseHeader.header.operation == StorageHeader.READ:
-        print 'Read data:', readNBytes(ssl_sock, responseHeader.header.length)
-    else: # written
-        print 'Data written'
+    def __init__(self, host, port):
+        self.connection = BlockingProtoBufConnection(StorageResponseHeader)
+        self.connection.start(host, port)
+        
+    def _sendHeader(self, offset, length, opp):
+        msg = HashedStorageHeader()
+        msg.header.operation = opp
+        msg.header.offset = offset
+        msg.header.length = length
+        signAndTimestampHashedStorageHeader(msg)
+        self.connection.sendMsg(msg)
+        
+    def writeData(self, offset, data):
+        self._sendHeader(offset, len(data), StorageHeader.WRITE)
+        self.connection.sendRawBytes(data)
+        responseHeader = self.connection.readMsg()
+        if responseHeader.status == StorageResponseHeader.OK:
+            return True
+        print responseHeader.errorMsg
+        return False
+        
+    def readData(self, offset, length):
+        self._sendHeader(offset, length, StorageHeader.READ)
+        responseHeader = self.connection.readMsg()
+        if responseHeader.status == StorageResponseHeader.OK:
+            return self.connection.readNBytes(responseHeader.header.length)
+        print responseHeader.errorMsg
+        return None
+        
+    def stop(self):
+        self.connection.stop()
     
 
 if __name__ == '__main__':
-    print 'Creating socket'
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ssl_sock = ssl.wrap_socket(s, ca_certs="sslcert/cert.pem", cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_SSLv23)
-    print 'Connecting'
-    ssl_sock.connect((HOST, PORT))
-    
-    # protocol version
-    ssl_sock.send(pack(STRUCT_BYTE, 0b1))
+    """
+    VERY simple and stupid test....
+    """
+    client = SimpleStorageTestClient(HOST, PORT)
     
     data = "HELLO WORLD!!!!!"
     
-    sendWriteRequest(ssl_sock, 0, data)
-    readResponse(ssl_sock)
+    client.writeData(0, data)
+    print client.readData(0, len(data))
+    client.stop();
     
-    sendReadRequest(ssl_sock, 0, len(data))
-    readResponse(ssl_sock)
-    
-    ssl_sock.close();
-    print 'closed'
+    print 'closed..'
     
     
