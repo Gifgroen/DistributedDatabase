@@ -21,6 +21,8 @@ class SimpleStorageTestClient(object):
         self.connection.start(host, port)
         
     def _sendHeader(self, offset, length, opp):
+        # NOTE: in real world this is created by the
+        # dictionary service.
         msg = HashedStorageHeader()
         msg.header.operation = opp
         msg.header.offset = offset
