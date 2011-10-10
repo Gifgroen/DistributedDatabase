@@ -29,6 +29,7 @@ message StorageResponseHeader {
     }
     required Status status = 1;
     required StorageHeader header = 2;
+    optional string errorMsg = 3; // is set if status == ERROR
 }
 
 message DictionaryResponseHeader {

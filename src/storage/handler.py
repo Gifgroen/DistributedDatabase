@@ -1,12 +1,12 @@
 from generic.communication_pb2 import HashedStorageHeader, StorageHeader, StorageResponseHeader
+from generic.crypto import validateHashedStorageHeader
 
 from twisted.python import log
 
-from hashlib import sha1
-import time
-
-PRIVATE_HASH_KEY = "BLABLABLA"
-HASH_EXPIRE_SECONDS = 30
+# TODO timeout for XOR writes, what if it takes to long before a response
+# is received from xor partner.
+# or maybe even entire timeout for writes (also if a clients stops sending
+# bytes but keeps connection open...)
 
 """
 Helper function to copy the entire header data from
@@ -15,6 +15,7 @@ The protobuf python library doesn't support this by
 default?
 """
 def copyHeaderData(fromHeader, toHeader):
+    # TODO CHECK CopyFrom()
     toHeader.operation = fromHeader.operation;
     toHeader.offset = fromHeader.offset;
     toHeader.length = fromHeader.length;
@@ -34,17 +35,17 @@ class StorageRequestHandler():
         self.db = protocol.factory.db
         self.signedHeader = None
         self.currentWriteOffset = 0
-            
+        self.currentXORWrittenOffset = 0
+    
+    """
+    Validate signedHeader, throws exception if hash is invalid
+    """
     def _validateHash(self):
-        if self.signedHeader.hashAlgorithm != HashedStorageHeader.SHA1:
-            raise Exception("Unsupported hash")
-        sha1hash = sha1(self.signedHeader.header.SerializeToString() + PRIVATE_HASH_KEY)
-        log.msg('parsed hash: %s' % sha1hash.hexdigest())
-        if self.signedHeader.hash != sha1hash.digest():
-            raise Exception("Incorrect hash")
-        timediff = int(time.time()) - self.signedHeader.header.requestTimestamp
-        if timediff > HASH_EXPIRE_SECONDS:
-            raise Exception("Hash key expired %d seconds" % timediff)
+        validationResult = validateHashedStorageHeader(self.signedHeader)
+        # explicit type checing of True is necessary since a string
+        # is returned on error
+        if validationResult is not True:
+            self._sendExceptionAndClose("Hash validation error: %s" % validationResult)
         
     def _handleStorgeHeader(self):
         header = self.signedHeader.header
@@ -64,10 +65,6 @@ class StorageRequestHandler():
     
     """
     Signaled by database if read data is finished
-    Important note: this function is called from the disk r/w
-    thread, so in the meanwhile it is theoretical possible that
-    self.signedHeader is replaced with a new operation. This 
-    means that only parameters might be used.
     self.protocol.writeMsg can be called since only one thread
     is allowed to execute this.
     """
@@ -77,12 +74,25 @@ class StorageRequestHandler():
         self.protocol.writeRaw(data)
         
     """
-    Send storage acknowledge to client
+    Close connection and send error response
     """
-    def _sendACK(self):
+    def _sendExceptionAndClose(self, errorString):
+        self._sendACK(errorString)
+        # now close and log error
+        raise Exception("%s (is send to client)" % errorString)
+    
+    """
+    Send storage acknowledge to client
+    if an error string is passed, an error response is send
+    """
+    def _sendACK(self, error=None):
         responseHeader = StorageResponseHeader()
         copyHeaderData(self.signedHeader.header, responseHeader.header)
-        responseHeader.status = StorageResponseHeader.OK
+        if error:
+            responseHeader.status = StorageResponseHeader.ERROR
+            responseHeader.errorMsg = error
+        else:
+            responseHeader.status = StorageResponseHeader.OK
         self.protocol.writeMsg(responseHeader)
         
     """
@@ -94,21 +104,59 @@ class StorageRequestHandler():
         self.currentWriteOffset = 0
         self._validateHash()
         return self._handleStorgeHeader()
+    
+    """
+    Callback from _handleWrite that is called if the partner has 
+    received and written the bytes.
+    """
+    def xorBytesWrittenToPartner(self, offset, length):
+        # Check if something went wrong by sending xor update
+        # close connection, client will have to resend messge.
+        # Every WRITE request on a single channel is 
+        # FIFO ordered, so is enough to check the last offset.
+        if self.currentXORWrittenOffset != offset:
+            self._sendExceptionAndClose("XOR Replicate error")
+        self.currentXORWrittenOffset += length
+        # check if entire file is written
+        if self.currentXORWrittenOffset == header.offset + header.length:
+            # TODO: notify dictionary service that this file
+            # is written and can be read after that send
+            # acknowledge, thus NOT HERE...
+            self._sendACK()
+    
+    """
+    Handle bytes of write request from client.
+    Write bytes locally and send to xor partner
+    """
+    def _handleWrite(self, bytes):
+        log.msg('Write raw bytes of length %d' % len(bytes))
+        self.db.pushWrite(self.currentWriteOffset, bytes)
+        if hasattr(self.protocol.factory, 'xor_server_connection'):
+            self.protocol.factory.xor_server_connection.sendXORUpdate(
+                self.currentWriteOffset,
+                bytes,
+                self.xorBytesWrittenToPartner
+            )
+    
+    """
+    Handle bytes of xor write request
+    """
+    def _handleXORWrite(self, bytes):
+        log.msg('Write the XORED result raw bytes of length %d' % len(bytes))
+        self.db.pushXORWrite(self.currentWriteOffset, bytes)
         
-    def _sendXORUpdate(self, bytes): # what if is not received by other peer?
-        pass # TODO
-        
-    def parsedRawBytes(self, bytes): # doesn't have to be implemented by dictionary service
+    """
+    A series of raw bytes is received by the parser.
+    This are the actual storage bytes for a WRITE
+    or XOR_WRITE request.
+    """
+    def parsedRawBytes(self, bytes):
         log.msg("Received %d raw bytes" % len(bytes))
         header = self.signedHeader.header
         if header.operation == StorageHeader.WRITE:
-            log.msg('Write raw bytes of length %d' % len(bytes))
-            self.db.pushWrite(self.currentWriteOffset, bytes)
-            self._sendXORUpdate(bytes)
+            self._handleWrite(bytes)
         elif header.operation == StorageHeader.XOR_WRITE:
-            log.msg('Write the XORED result raw bytes of length %d' % len(bytes))
-            self.db.pushXORWrite(self.currentWriteOffset, bytes)
+            self._handleXORWrite(bytes)
+        # increase written offset
         self.currentWriteOffset += len(bytes)
-        if self.currentWriteOffset == header.offset + header.length:
-            # TODO notify dictionary service that item is written
-            self._sendACK()
+        

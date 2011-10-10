@@ -1,25 +1,14 @@
 #!/usr/bin/env python
-import sys, ssl, socket, time
-from hashlib import sha1
+import sys, ssl, socket
 from struct import pack, unpack
 
 from generic.communication_pb2 import HashedStorageHeader, StorageHeader, StorageResponseHeader
-
-from storage.handler import PRIVATE_HASH_KEY # for testing only
+from generic.crypto import signAndTimestampHashedStorageHeader # for testing only
 
 HOST = 'localhost'    # The remote host
 PORT = 8989           # The same port as used by the server
 
 STRUCT_BYTE = "!B"
-
-
-def sign(msg):
-    msg.header.requestTimestamp = int(time.time())
-    msg.hashAlgorithm = HashedStorageHeader.SHA1
-    sha1hash = sha1(msg.header.SerializeToString() + PRIVATE_HASH_KEY)
-    msg.hash = sha1hash.digest()
-    
-    print 'hash:', sha1hash.hexdigest()
     
 def sendMsg(ssl_sock, msg):
     msgData = msg.SerializeToString()
@@ -33,7 +22,7 @@ def sendWriteRequest(ssl_sock, offset, data):
     msg.header.operation = StorageHeader.WRITE
     msg.header.offset = offset
     msg.header.length = len(data)
-    sign(msg)
+    signAndTimestampHashedStorageHeader(msg)
     
     sendMsg(ssl_sock, msg)
     
@@ -44,7 +33,7 @@ def sendReadRequest(ssl_sock, offset, length):
     msg.header.operation = StorageHeader.READ
     msg.header.offset = offset
     msg.header.length = length
-    sign(msg)
+    signAndTimestampHashedStorageHeader(msg)
     sendMsg(ssl_sock, msg)
     
 

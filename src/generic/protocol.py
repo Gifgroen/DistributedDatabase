@@ -119,6 +119,5 @@ class BinaryMessageProtocol(Protocol):
         msgData = protoBufMsg.SerializeToString()
         self.writeRaw(pack(STRUCT_BYTE, len(msgData)))
         log.msg('Send protoBufMsg of length %d to client.' % len(msgData))
-        self.writeRaw(msgData)
-        
+        self.writeRaw(msgData)        
         
