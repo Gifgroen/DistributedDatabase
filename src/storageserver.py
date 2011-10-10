@@ -3,6 +3,7 @@
 import sys
 from optparse import OptionParser
 from twisted.python import log
+from twisted.internet import reactor
 
 from generic.genericserver import FixedLengthMessageServer
 from generic.protocol import BinaryMessageProtocol
@@ -24,6 +25,7 @@ class StorageServer(FixedLengthMessageServer):
             self.factory.xor_server_connection = XORPartnerConnection(options.xor_host, options.xor_port)
             self.factory.xor_server_connection.start()
         else:
+            self.factory.xor_server_connection = None
             log.msg("MODE: Private XOR replication server")
 
 if __name__ == '__main__':
@@ -44,5 +46,5 @@ if __name__ == '__main__':
     if options.verbose:
         log.startLogging(sys.stdout)
     
-    server = StorageServer(options, args)    
+    server = StorageServer(options, args)
     server.run()

@@ -20,8 +20,8 @@ class XORPartnerConnection(object):
         self.connection.start(host, port)
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
-        reactor.addSystemEventTrigger('during', 'shutdown', self.stop)
-    
+        reactor.addSystemEventTrigger('before', 'shutdown', self.stop)
+            
     def sendXORUpdate(self, offset, bytes, callback):
         self.work_queue.put((offset, bytes, callback))
     
@@ -77,4 +77,3 @@ class XORPartnerConnection(object):
     """
     def stop(self):
         self.cont = False
-        

@@ -22,7 +22,7 @@ class StorageDatabase(object):
         self._initDBFile()
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
-        reactor.addSystemEventTrigger('during', 'shutdown', self.stop)
+        reactor.addSystemEventTrigger('before', 'shutdown', self.stop)
         
     def _initDBFile(self):
         self.dbFile = open(self.filename, 'w+b')
