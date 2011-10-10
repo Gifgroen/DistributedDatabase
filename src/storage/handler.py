@@ -76,7 +76,7 @@ class StorageRequestHandler():
     """
     Close connection and send error response
     """
-    def _sendExceptionAndClose(self, errorString):
+    def _sendExceptionAndDie(self, errorString):
         self._sendACK(errorString)
         # now close and log error
         raise Exception("%s (is send to client)" % errorString)
@@ -109,16 +109,18 @@ class StorageRequestHandler():
     Callback from _handleWrite that is called if the partner has 
     received and written the bytes.
     """
-    def xorBytesWrittenToPartner(self, offset, length):
-        # Check if something went wrong by sending xor update
-        # close connection, client will have to resend messge.
-        # Every WRITE request on a single channel is 
-        # FIFO ordered, so is enough to check the last offset.
+    def xorBytesWrittenToPartner(self, offset, length, errorMsg):
+        # Check if something went wrong by sending xor update and
+        # close connection, client will have to resend entire request.
+        # Every WRITE request on a single channel is FIFO ordered, so
+        # is enough to check the last offset.
+        if errorMsg:
+            self._sendExceptionAndDie("XOR Replicate error: %s" % errorMsg)
         if self.currentXORWrittenOffset != offset:
-            self._sendExceptionAndClose("XOR Replicate error")
+            self._sendExceptionAndDie("XOR Replicate error")
         self.currentXORWrittenOffset += length
         # check if entire file is written
-        if self.currentXORWrittenOffset == header.offset + header.length:
+        if self.currentXORWrittenOffset == self._finalOffset():
             # TODO: notify dictionary service that this file
             # is written and can be read after that send
             # acknowledge, thus NOT HERE...
@@ -130,13 +132,13 @@ class StorageRequestHandler():
     """
     def _handleWrite(self, bytes):
         log.msg('Write raw bytes of length %d' % len(bytes))
-        self.db.pushWrite(self.currentWriteOffset, bytes)
-        if hasattr(self.protocol.factory, 'xor_server_connection'):
+        def sendXORResult(offset, data, xored):
             self.protocol.factory.xor_server_connection.sendXORUpdate(
-                self.currentWriteOffset,
-                bytes,
-                self.xorBytesWrittenToPartner
+                offset, xored, self.xorBytesWrittenToPartner
             )
+        self.db.pushXORRead(self.currentWriteOffset, bytes, sendXORResult)
+        # it is FIFO, so we can now send the write request
+        self.db.pushWrite(self.currentWriteOffset, bytes)
     
     """
     Handle bytes of xor write request
@@ -145,6 +147,9 @@ class StorageRequestHandler():
         log.msg('Write the XORED result raw bytes of length %d' % len(bytes))
         self.db.pushXORWrite(self.currentWriteOffset, bytes)
         
+        if self.currentWriteOffset + len(bytes) == self._finalOffset():
+            self._sendACK()
+        
     """
     A series of raw bytes is received by the parser.
     This are the actual storage bytes for a WRITE
@@ -152,11 +157,18 @@ class StorageRequestHandler():
     """
     def parsedRawBytes(self, bytes):
         log.msg("Received %d raw bytes" % len(bytes))
-        header = self.signedHeader.header
-        if header.operation == StorageHeader.WRITE:
+        if self.signedHeader.header.operation == StorageHeader.WRITE:
             self._handleWrite(bytes)
-        elif header.operation == StorageHeader.XOR_WRITE:
+        elif self.signedHeader.header.operation == StorageHeader.XOR_WRITE:
             self._handleXORWrite(bytes)
         # increase written offset
         self.currentWriteOffset += len(bytes)
+        
+    """
+    Helper function to calculate index of the byte
+    after last byte.
+    """
+    def _finalOffset(self):
+        return self.signedHeader.header.offset + self.signedHeader.header.length
+        
         

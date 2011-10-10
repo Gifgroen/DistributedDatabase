@@ -7,7 +7,7 @@ from generic.communication_pb2 import HashedStorageHeader, StorageHeader, Storag
 from generic.crypto import signAndTimestampHashedStorageHeader # for testing only
 
 HOST = 'localhost'    # The remote host
-PORT = 8989           # The same port as used by the server
+PORT = 8080           # The same port as used by the server
 
 """
 Note: this class does almost nothing with the response
