@@ -56,6 +56,8 @@ class StorageRequestHandler():
             self.db.pushRead(header.offset, header.length, self.diskReadFinished)
             return 0 # we don't want to receive any raw data
         elif opp == StorageHeader.WRITE:
+            if self.protocol.factory.xor_server_connection is None:
+                self._sendExceptionAndDie("XOR server doesn't support replicated WRITE's")
             log.msg('Parsed WRITE header, waiting for %d bytes' % length)
             return length
         elif opp == StorageHeader.XOR_WRITE:
