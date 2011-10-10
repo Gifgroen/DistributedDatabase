@@ -1,5 +1,4 @@
 from Queue import Queue, Empty
-from threading import Lock, Thread
 
 from twisted.internet import reactor
 from twisted.python import log
@@ -15,16 +14,19 @@ def byteValue(bytes):
 class StorageDatabase(object):
     
     """
-    Create a StorageDatabase for a given filename.
-    The file might use infinitly disk space, since the
-    pushWrite request control the seeker.
+    Create a StorageDatabase for a given filename and size.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, size):
         self.filename = filename
+        self.size = size
+        self._initDBFile()
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
         reactor.addSystemEventTrigger('during', 'shutdown', self.stop)
         
+    def _initDBFile(self):
+        self.dbFile = open(self.filename, 'w+b')
+        self.dbFile.write('\0' * self.size)
     
     """
     Starts the database worker.
@@ -34,7 +36,6 @@ class StorageDatabase(object):
     def start(self):
         if self.cont:
             raise Exception("Already running")
-        self.dbFile = open(self.filename, 'w+b')
         self.cont = True
         reactor.callInThread(self._workerFunction)
     
@@ -51,6 +52,7 @@ class StorageDatabase(object):
     and length, and the data.
     """
     def pushRead(self, offset, length, callback, *args):
+        assert offset + len(data) < self.size
         self.work_queue.put((self._handleRead,
             offset, length, callback, args))
     
@@ -60,6 +62,7 @@ class StorageDatabase(object):
     the offset to disk.
     """
     def pushWrite(self, offset, data):
+        assert offset + len(data) < self.size
         self.work_queue.put((self._handleWrite, offset, data))
 
     """
@@ -70,6 +73,7 @@ class StorageDatabase(object):
     P' = I XOR P.
     """
     def pushXORWrite(self, offset, data):
+        assert offset + len(data) < self.size
         self.work_queue.put((self._handleXORWrite, offset, data))
         
     """
@@ -81,6 +85,7 @@ class StorageDatabase(object):
     XOR-update to the parity server. I = A' XOR A
     """
     def pushXORRead(self, offset, data, callback, *args):
+        assert offset + len(data) < self.size
         self.work_queue.put((self._handleXORRead,
             offset, data, callback, args))
     
