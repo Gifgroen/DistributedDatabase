@@ -9,9 +9,7 @@ PORT = 8989           # The same port as used by the server
 
 STRUCT_BYTE = "!B"
 
-
 def readNBytes(ssl_sock, numBytes):
-    print 'read %d bytes' % numBytes
     msgData = ''
     while len(msgData) != numBytes:
         restLength = numBytes - len(msgData)
@@ -29,7 +27,6 @@ def sendMsg(ssl_sock, msg):
 def readResponse(ssl_sock):
     responseHeaderLength = unpack(STRUCT_BYTE, readNBytes(ssl_sock, 1))[0]
     responseHeaderData = readNBytes(ssl_sock, responseHeaderLength)
-    print len(responseHeaderData)
     responseHeader = DictionaryResponseHeader()
     responseHeader.ParseFromString(responseHeaderData)
 
@@ -61,7 +58,7 @@ if __name__ == '__main__':
     ssl_sock.send(pack(STRUCT_BYTE, 0b1))
     
     rhead = DictionaryHeader()
-    rhead.size = 1337
+    rhead.size = 59863
     rhead.operation = DictionaryHeader.ADD
     sendADDRequest(ssl_sock, rhead)
     response1 = readResponse(ssl_sock)
@@ -71,8 +68,15 @@ if __name__ == '__main__':
     rhead2.key = response1.key
     rhead2.operation = DictionaryHeader.GET
     sendGETRequest(ssl_sock, rhead2)
-    response1 = readResponse(ssl_sock)
-    print "GET RESPONSE: ", response1, "\n"
+    response2 = readResponse(ssl_sock)
+    print "GET RESPONSE: ", response2, "\n"
+    
+    rhead3 = DictionaryHeader()
+    rhead3.key = response1.key
+    rhead3.operation = DictionaryHeader.DELETE
+    sendGETRequest(ssl_sock, rhead3)
+    response3 = readResponse(ssl_sock)
+    print "DELETE RESPONSE: ", response3, "\n"
 
     
     ssl_sock.close();

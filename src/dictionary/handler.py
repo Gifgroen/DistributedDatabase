@@ -21,9 +21,7 @@ class DictionaryRequestHandler():
         requestMessage = DictionaryHeader()
         requestMessage.ParseFromString(msgData)
         
-        # TODO: Parse message
         log.msg("parsed message!")
 
-        # TODO -> delegate request
         msg = self.protocol.factory.delegate.handleRequest(requestMessage)
         self.protocol.writeMsg(msg)

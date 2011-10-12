@@ -66,7 +66,15 @@ class LocationHandler:
         -> response: OK message
     """
     def handleDELETE(self):
-        pass
-        # TODO: delete from filetable and release in freelist
+        rhead = DictionaryResponseHeader()
+        rhead.status = DictionaryResponseHeader.OK
+        
+        # Delete from filetable
+        status = self.filetable.delete(self.requestHeader.key)
+        if status == False:
+            rhead.status = DictionaryResponseHeader.NOT_EXISTING_KEY
+        rhead.locations.extend([])
+
+        return rhead
 
         # TODO: Build proper response

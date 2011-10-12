@@ -1,5 +1,5 @@
 from generic.communication_pb2 import DataLocation, StorageHeader
-from storageclient import sign
+from generic.crypto import *
 from storage.handler import copyHeaderData
 
 """
@@ -31,5 +31,5 @@ class LocationEntry(object):
 	    return self._toDataLocationMessage()
 
 	def _toDataLocationMessage(self):
-	    sign(self.dataLocation.header)
+	    signAndTimestampHashedStorageHeader(self.dataLocation.header)
 	    return self.dataLocation

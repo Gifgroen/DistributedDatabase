@@ -1,5 +1,7 @@
 from tableentry import LocationEntry
 
+import freelist.memtable as memtable
+
 """
 The distributed filetable of a Dictionary server that maps keys to locations
 """
@@ -17,11 +19,11 @@ class DictionaryTable(object):
     """
     def add(self, sizeOfData):
         # get space from freelist
-        key = "randKey"
-        self.locationDict[key] = LocationEntry("localhost", 4242, 0, sizeOfData)
+        loc = memtable.getFreeSpace(sizeOfData)
+        self.locationDict[loc["key"]] = LocationEntry(loc["hostname"], loc["port"], loc["offset"], loc["length"])
 
         # TODO return location
-        return key
+        return loc['key']
 
     """
     Get a location from the locationDict
@@ -39,6 +41,19 @@ class DictionaryTable(object):
 	@return an acknowledgement message (OK, FAIL, ...)
     """
     def delete(self, key):
+        if key not in self.locationDict:
+            return False
+
+        # get the location to free in freelist
+        loc = self.locationDict[key]
+        # Release in freelist
+        memtable.releaseSpace(loc)
+        del(loc)
+        return True
+
+            
+        
+
+        
         # TODO: Create Notification message and notify freelist
-        if key in self.locationDict:
-            self.locationDict.remove(key)
+        
