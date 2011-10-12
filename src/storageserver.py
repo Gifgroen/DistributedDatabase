@@ -34,11 +34,11 @@ if __name__ == '__main__':
     StorageServer.addServerOptions(parser)
     
     parser.add_option("-d", "--db", dest="databasefile", default="storagedb.bin", help="loctation of database file", metavar="FILE")
-    parser.add_option("-s", "--dbsize", dest="databasesize", default=100*1024*1024, help="size of database in bytes")
+    parser.add_option("-s", "--dbsize", dest="databasesize", type="int", default=100*1024*1024, help="size of database in bytes")
     
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help="don't print status messages to stdout")
     parser.add_option("--xor_host", dest="xor_host", default=None, help="RAID4 XOR partner host")
-    parser.add_option("--xor_port", dest="xor_port", default=8989, help="RAID4 XOR partner port")
+    parser.add_option("--xor_port", dest="xor_port", type="int", default=8989, help="RAID4 XOR partner port")
     
     
     (options, args) = parser.parse_args()
