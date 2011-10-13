@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import sys, traceback
 from time import sleep
 from storageclient import SimpleStorageTestClient
@@ -15,7 +16,7 @@ def exit():
         instance.terminate()
     for instance in parity_instances.values():
         instance.terminate()
-    sleep(3)
+    sleep(1)
     sys.exit()
     
 def _setPort(port):
@@ -30,8 +31,9 @@ def startStorage(shortkey, xor_host, xor_port, port=None):
     if shortkey in storage_instances:
         raise Exception('%s already in running instaces' % shortkey)
     storage_instances[shortkey] = Popen(["./storageserver.py", "-p", str(port), "-d", shortkey + ".bin", "--xor_host", xor_host, "--xor_port", str(xor_port)])
+    print 'Created new storage service on port %d' % port
     sleep(3)
-    connect("localhost", port)
+    connect("localhost", port, shortkey)
     
 def ss(*args):
     startStorage(*args)
@@ -40,8 +42,8 @@ def startParityStorage(shortkey, port=None):
     port = _setPort(port)
     if shortkey in parity_instances:
         raise Exception('%s already in running instaces' % shortkey)
-    
     parity_instances[shortkey] = Popen(["./storageserver.py", "-p", str(port), "-d", shortkey + ".bin"])
+    print 'Created new parity service on port %d' % port
     sleep(3)
     connect("localhost", port, shortkey)
 
@@ -76,6 +78,8 @@ def startCLI():
                 print output
         except SystemExit:
             return
+        except KeyboardInterrupt:
+            exit()
         except:
             traceback.print_exc(file=sys.stdout)
     
