@@ -96,8 +96,8 @@ def startup():
     t = Thread(target=heartBeatJob, name='HeartBeatJob')
     t.start()
     
-def addServer(host, port):
-    newServer = Connection(host, port)
+def addServer(host, clientPort, adminPort):
+    newServer = Connection(host, clientPort, adminPort)
     STAND_BY_LIST.append(newServer)
     
 
@@ -106,7 +106,7 @@ def _createGroup():
     for standby in STAND_BY_LIST:
         if standby.host not in [server.host for server in servers]:
             server.append(standby)
-            if len(servers) == 3
+            if len(servers) == 3:
                 return servers
 
 def startNewGoup():
