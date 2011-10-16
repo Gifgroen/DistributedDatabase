@@ -2,14 +2,8 @@ from Queue import Queue, Empty
 
 from twisted.internet import reactor
 from twisted.python import log
+from util import xorBytes, byteValue
 
-
-def xorBytes(a, b):
-    assert len(a) == len(b)
-    return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in zip(a, b))
-
-def byteValue(bytes):
-    return [ord(byte) for byte in bytes]
 
 class StorageDatabase(object):
     

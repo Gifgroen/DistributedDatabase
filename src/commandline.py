@@ -74,15 +74,6 @@ def read(shortkey, offset, length):
         raise Exception('%s does not exist' % shortkey)
     return connections[shortkey].readData(offset, length)
     
-"""
-helper function
-"""
-    
-def xorBytes(a, b):
-    assert len(a) == len(b)
-    return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in zip(a, b))
-    
-    
     
 msg1 = "Hello World!"
 msg2 = "Blablablablaaaa"
