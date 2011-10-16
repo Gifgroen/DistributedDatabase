@@ -10,6 +10,16 @@ STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
 
 
+class AdminStorageClient(object): # TODO
+    def __init__(self, host, port):
+        pass
+        
+    def setXORServer(host, port):
+        pass
+    
+    def recoverDataFrom(hostA, portA, hostB, portB):
+        pass
+
 class Connection(object):
     
     def __init__(self, host, clientPort, adminPort):
@@ -17,7 +27,7 @@ class Connection(object):
         self.clientPort = clientPort
         self.adminPort = adminPort
         self.client = SimpleStorageTestClient(host, clientPort)
-        self.adminClient = AdminClient(host, adminPort)
+        self.adminClient = AdminStorageClient(host, adminPort)
         
     def sendHeartbeat(self):
         try:
