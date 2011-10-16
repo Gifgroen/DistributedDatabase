@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from storageclient import SimpleStorageTestClient
 from threading import Thread
 from time import time, sleep
@@ -119,8 +117,3 @@ def startNewGoup():
         return True
     return False
 
-
-if __name__ == '__main__':
-    pass
-    
-    
