@@ -1,6 +1,8 @@
 option optimize_for = LITE_RUNTIME;
 
 
+// Public Storage service messages
+
 message HashedStorageHeader {
     enum HashAlgorithm {
         SHA1 = 1;
@@ -32,6 +34,8 @@ message StorageResponseHeader {
     optional string errorMsg = 3; // is set if status == ERROR
 }
 
+// Public dictionary service messages
+
 message DictionaryResponseHeader {
     enum Status {
         OK = 1;
@@ -59,3 +63,34 @@ message DictionaryHeader {
     optional string key = 2;
     optional uint64 size = 3;
 }
+
+// Internal Storage service messages for administration
+
+message StorageAdminRequestContainer {
+    enum Operation {
+        SET_XOR_SERVER = 1;
+        RECOVER_FROM = 2;
+    }
+    required Operation operation = 1;
+    optional bytes messageData = 2;
+}
+
+message StorageAdminServer {
+    required string host = 1;
+    required uint64 port = 2;
+}
+
+message StorageAdminRecoveryOperation {
+    required StorageAdminServer serverA = 1;
+    required StorageAdminServer serverB = 2;
+}
+
+message StorageAdminResponse {
+    enum Status {
+        OK = 1;
+        ERROR = 2;
+    }
+    required Status status = 1;
+    optional string errorMsg = 2; // is set if status == ERROR
+}
+

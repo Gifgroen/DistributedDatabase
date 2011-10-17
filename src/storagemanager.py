@@ -2,21 +2,47 @@ from storageclient import SimpleStorageTestClient
 from threading import Thread
 from time import time, sleep
 
+from generic.communication_pb2 import StorageAdminResponse, StorageAdminRequestContainer, StorageAdminRecoveryOperation, StorageAdminServer
+
 HEARTBEAT_SECONDS = 30
 
 STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
 
 
-class AdminStorageClient(object): # TODO
+class AdminStorageClient(object):
     def __init__(self, host, port):
-        pass
+        self.connection = BlockingProtoBufConnection(StorageAdminResponse)
+        self.connection.start(host, port)
+        
+    def _send(self, opp, msg):
+        container = StorageAdminRequestContainer()
+        container.operation = opp
+        container.msgData = serverMessage.SerializeToString()
+        self.connection.sendMsg(container)
+        
+    def _checkResponse(self):
+        response = self.connection.readMsg()
+        if response.status == StorageAdminResponse.OK:
+            return True
+        print response.errorMsg
+        return False
         
     def setXORServer(host, port):
-        pass
+        serverMsg = StorageAdminServer()
+        serverMsg.host = host
+        serverMsg.port = port
+        self._send(serverMsg, StorageAdminRequestContainer.SET_XOR_SERVER)
+        return self._checkResponse()
     
     def recoverDataFrom(hostA, portA, hostB, portB):
-        pass
+        recoveryMsg = StorageAdminRecoveryOperation()
+        recoveryMsg.serverA.host = hostA
+        recoveryMsg.serverA.port = portA
+        recoveryMsg.serverB.host = hostB
+        recoveryMsg.serverB.port = portB
+        self._send(serverMsg, StorageAdminRequestContainer.RECOVER_FROM)
+        return self._checkResponse()
 
 class Connection(object):
     
