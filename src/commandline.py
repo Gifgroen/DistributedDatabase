@@ -10,13 +10,10 @@ from subprocess import Popen
 LAST_PORT = 8080
 
 storage_instances = {} #shortkey -> Popen
-parity_instances = {} #shortkey -> Popen
 connections = {} #shortkey -->SimpleStorageTestClient
 
 def exit2():
     for instance in storage_instances.values():
-        instance.terminate()
-    for instance in parity_instances.values():
         instance.terminate()
     sleep(1)
     sys.exit()
@@ -43,9 +40,9 @@ def startStorage(shortkey, port=None, adminPort=None):
 def ss(*args):
     startStorage(*args)
     
-def connect(server, port, shortkey):
+def connect(server, port, shortkey=None):
     if shortkey is None:
-        shortkey = server 
+        shortkey = '%s:%d' % (server, port)
     if shortkey in connections:
         raise Exception('%s already in active connections, choose a new connection name' % shortkey)
     connections[shortkey] = SimpleStorageTestClient(server, port)
@@ -61,10 +58,3 @@ def read(shortkey, offset, length):
     if shortkey not in connections:
         raise Exception('%s does not exist' % shortkey)
     return connections[shortkey].readData(offset, length)
-    
-
-def setup():
-    ss('server1')
-    sleep(1)
-    ss('server2')
-    
