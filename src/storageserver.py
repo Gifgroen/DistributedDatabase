@@ -11,6 +11,8 @@ from storage.handler import StorageRequestHandler
 from storage.storagedb import StorageDatabase
 from storage.admin import StorageAdminServer
 
+DEFAULT_DB_SIZE = 1*1024*1024 # 1mb, small for testing
+
 class StorageServer(FixedLengthMessageServer):
     def __init__(self, options, args):
         super(StorageServer, self).__init__(options, args)
@@ -26,7 +28,7 @@ if __name__ == '__main__':
     StorageServer.addServerOptions(parser)
     
     parser.add_option("-d", "--db", dest="databasefile", default="storagedb.bin", help="loctation of database file", metavar="FILE")
-    parser.add_option("-s", "--dbsize", dest="databasesize", type="int", default=100*1024*1024, help="size of database in bytes")
+    parser.add_option("-s", "--dbsize", dest="databasesize", type="int", default=DEFAULT_DB_SIZE, help="size of database in bytes")
     
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help="don't print status messages to stdout")
     

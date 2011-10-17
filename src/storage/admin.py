@@ -7,6 +7,9 @@ from generic.protocol import BinaryMessageProtocol
 from storageclient import SimpleStorageTestClient
 from twisted.python import log
 
+from util import xorBytes
+
+RECOVER_CHUNK_SIZE = 1024*1024 #1mb
 
 class StorageAdminRequestHandler(object):
     def __init__(self, protocol):
@@ -49,9 +52,25 @@ class StorageAdminRequestHandler(object):
         self._reply()
         #log.msg('reply finished')
     
+    def _recoverPiece(self, connA, connB, offset, length):
+        log.msg("Recover from %d-%d (max: %d)" % (offset, offset+length, self.protocol.factory.databasesize))
+        a = connA.readData(offset, length)
+        b = connA.readData(offset, length)
+        result = xorBytes(a, b)
+        log.msg("%s", repr(result))
+        db = self.protocol.factory.storageServer.factory.db
+        db.pushWrite(offset, result)
+        
     def _recover(self, connA, connB):        
-        CHUNK_SIZE = 1024 #1kb
-        # TODO
+        current_offset = 0
+        while current_offset + RECOVER_CHUNK_SIZE < self.protocol.factory.databasesize:
+            self._recoverPiece(connA, connB, current_offset, RECOVER_CHUNK_SIZE)
+            current_offset += RECOVER_CHUNK_SIZE
+        # recover rest that didn't fit into the last chunk
+        restLength = self.protocol.factory.databasesize - current_offset - 1
+        if restLength != 0:
+            self._recoverPiece(connA, connB, current_offset, restLength)
+        log.msg("send reply")
         self._reply()
     
     def _handleRecovery(self, recoveryMsg):
@@ -62,6 +81,7 @@ class StorageAdminRequestHandler(object):
         connectionA = SimpleStorageTestClient(a.host, a.port)
         connectionB = SimpleStorageTestClient(b.host, b.port)
         self._recover(connectionA, connectionB)
+        log.msg("recovery finished")
 
 
 class StorageAdminServer(FixedLengthMessageServer):
@@ -71,5 +91,7 @@ class StorageAdminServer(FixedLengthMessageServer):
         self.factory.protocol = BinaryMessageProtocol
         self.factory.protocolVersion = 0b1
         self.factory.storageServer = server
+        self.factory.databasesize = options.databasesize
         
-    
+        
+        

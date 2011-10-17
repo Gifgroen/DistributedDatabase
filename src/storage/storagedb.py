@@ -58,7 +58,7 @@ class StorageDatabase(object):
     """
     def pushWrite(self, offset, data):
         assert offset + len(data) < self.size
-        log.msg("pushWrite(%d, %s)" % (offset, data))
+        log.msg("pushWrite(%d, %s)" % (offset, repr(data)))
         self.work_queue.put((self._handleWrite, offset, data))
 
     """
@@ -70,7 +70,7 @@ class StorageDatabase(object):
     """
     def pushXORWrite(self, offset, data):
         assert offset + len(data) < self.size
-        log.msg("pushXORWrite(%d, %s)" % (offset, data))
+        log.msg("pushXORWrite(%d, %s)" % (offset, repr(data)))
         self.work_queue.put((self._handleXORWrite, offset, data))
         
     """
@@ -83,7 +83,7 @@ class StorageDatabase(object):
     """
     def pushXORRead(self, offset, data, callback, *args):
         assert offset + len(data) < self.size
-        log.msg("pushXORRead(%d, %s)" % (offset, data))
+        log.msg("pushXORRead(%d, %s)" % (offset, repr(data)))
         self.work_queue.put((self._handleXORRead,
             offset, data, callback, args))
     
