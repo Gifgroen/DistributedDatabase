@@ -9,8 +9,7 @@ from generic.genericserver import FixedLengthMessageServer
 from generic.protocol import BinaryMessageProtocol
 from storage.handler import StorageRequestHandler
 from storage.storagedb import StorageDatabase
-from storage.xorpartnerconnection import XORPartnerConnection
-
+from storage.admin import StorageAdminServer
 
 class StorageServer(FixedLengthMessageServer):
     def __init__(self, options, args):
@@ -20,16 +19,9 @@ class StorageServer(FixedLengthMessageServer):
         self.factory.handlerClass = StorageRequestHandler
         self.factory.protocol = BinaryMessageProtocol
         self.factory.protocolVersion = 0b1
-        if options.xor_host:
-            log.msg("MODE: Public storage server")
-            self.factory.xor_server_connection = XORPartnerConnection(options.xor_host, options.xor_port)
-            self.factory.xor_server_connection.start()
-        else:
-            self.factory.xor_server_connection = None
-            log.msg("MODE: Private XOR replication server")
+        self.factory.xor_server_connection = None
 
 if __name__ == '__main__':
-    
     parser = OptionParser()
     StorageServer.addServerOptions(parser)
     
@@ -37,8 +29,8 @@ if __name__ == '__main__':
     parser.add_option("-s", "--dbsize", dest="databasesize", type="int", default=100*1024*1024, help="size of database in bytes")
     
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help="don't print status messages to stdout")
-    parser.add_option("--xor_host", dest="xor_host", default=None, help="RAID4 XOR partner host")
-    parser.add_option("--xor_port", dest="xor_port", type="int", default=8989, help="RAID4 XOR partner port")
+    
+    parser.add_option("-a", "--adminport", type="int", dest="admin_port", help="Port of admin server")
     
     
     (options, args) = parser.parse_args()
@@ -47,4 +39,7 @@ if __name__ == '__main__':
         log.startLogging(sys.stdout)
     
     server = StorageServer(options, args)
-    server.run()
+    server.listen()
+    adminServer = StorageAdminServer(options, args, server)
+    adminServer.listen()
+    reactor.run()
