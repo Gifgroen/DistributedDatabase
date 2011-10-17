@@ -17,7 +17,9 @@ Also: fix code clones with storagedb queue.
 class XORPartnerConnection(object):
     def __init__(self, host, port):
         self.connection = BlockingProtoBufConnection(StorageResponseHeader)
+        log.msg('self.connection.start(%s,%d)' % (host, port))
         self.connection.start(host, port)
+        log.msg('finished')
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
         reactor.addSystemEventTrigger('before', 'shutdown', self.stop)

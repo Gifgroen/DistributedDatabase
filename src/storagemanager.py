@@ -2,8 +2,9 @@ from storageclient import SimpleStorageTestClient
 from generic.protobufconnection import BlockingProtoBufConnection
 from threading import Thread
 from time import time, sleep
+import socket
 
-from generic.communication_pb2 import StorageAdminResponse, StorageAdminRequestContainer, StorageAdminRecoveryOperation, StorageAdminServer
+from generic.communication_pb2 import StorageAdminResponse, StorageAdminRequestContainer, StorageAdminRecoveryOperation, StorageAdminServerLocation
 
 HEARTBEAT_SECONDS = 30
 
@@ -16,10 +17,10 @@ class AdminStorageClient(object):
         self.connection = BlockingProtoBufConnection(StorageAdminResponse)
         self.connection.start(host, port)
         
-    def _send(self, opp, msg):
+    def _send(self, msg, opp):
         container = StorageAdminRequestContainer()
         container.operation = opp
-        container.msgData = serverMessage.SerializeToString()
+        container.messageData = msg.SerializeToString()
         self.connection.sendMsg(container)
         
     def _checkResponse(self):
@@ -29,14 +30,14 @@ class AdminStorageClient(object):
         print response.errorMsg
         return False
         
-    def setXORServer(host, port):
-        serverMsg = StorageAdminServer()
+    def setXORServer(self, host, port):
+        serverMsg = StorageAdminServerLocation()
         serverMsg.host = host
         serverMsg.port = port
         self._send(serverMsg, StorageAdminRequestContainer.SET_XOR_SERVER)
         return self._checkResponse()
     
-    def recoverDataFrom(hostA, portA, hostB, portB):
+    def recoverDataFrom(self, hostA, portA, hostB, portB):
         recoveryMsg = StorageAdminRecoveryOperation()
         recoveryMsg.serverA.host = hostA
         recoveryMsg.serverA.port = portA
@@ -57,14 +58,14 @@ class Connection(object):
     def sendHeartbeat(self):
         try:
             self.client.readData(0, 1)
-        except:
+        except socket.error:
             return False
         return True
         
-    def setXORServer(connection):
+    def setXORServer(self, connection):
         self.adminClient.setXORServer(connection.host, connection.clientPort)
         
-    def recoverDataFrom(server1, server2):
+    def recoverDataFrom(self, server1, server2):
         self.adminClient.recoverDataFrom(
             server1.host, server1.clientPort,
             server2.host, server2.clientPort
@@ -80,17 +81,20 @@ class RaidGroup(object):
         self.serverA = a
         self.serverB = b
         self.xorServer = x
+        print 'set serverA xor'
+        self.serverA.setXORServer(x)
+        print 'set serverB xor'
+        self.serverB.setXORServer(x)
+        print 'servers started'
         
     def _recover(self, server1, server2):
         newServer = STAND_BY_LIST.pop()
-        if not newServer: # this should be handled better of course... now everything stops.
-            raise Exception("NEED NEW SERVER, BUT STAND_BY_LIST IS EMPTY")
         newServer.recoverDataFrom(server1, server2)
         return newServer
         
     def _recoverServer(self, runningServer, xor):
         newServer = self._recover(runningServer, xor)
-        newServer.setXORserver(self.xorServer)
+        newServer.setXORServer(self.xorServer)
         return newServer
         
     def _recoverXORServer(self):
@@ -146,6 +150,7 @@ def _createGroup(testing):
 
 def startNewGroup(testing=False):
     servers = _createGroup(testing)
+    print servers
     if servers:
         for server in servers:
             STAND_BY_LIST.remove(server)
@@ -158,8 +163,8 @@ def testSetup():
     startup()
     addServer('localhost', 8080, 8081)
     addServer('localhost', 8082, 8083)
-    addServer('localhost', 8083, 8085)
+    addServer('localhost', 8084, 8085)
+    print 'STAND_BY_LIST', STAND_BY_LIST
     startNewGroup(True)
     print 'ACTIVE_LIST', ACTIVE_LIST
-    print 'STAND_BY_LIST', STAND_BY_LIST
 

@@ -76,14 +76,14 @@ message StorageAdminRequestContainer {
     optional bytes messageData = 2;
 }
 
-message StorageAdminServer {
+message StorageAdminServerLocation {
     required string host = 1;
     required uint64 port = 2;
 }
 
 message StorageAdminRecoveryOperation {
-    required StorageAdminServer serverA = 1;
-    required StorageAdminServer serverB = 2;
+    required StorageAdminServerLocation serverA = 1;
+    required StorageAdminServerLocation serverB = 2;
 }
 
 message StorageAdminResponse {
