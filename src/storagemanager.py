@@ -6,7 +6,7 @@ import socket
 
 from generic.communication_pb2 import StorageAdminResponse, StorageAdminRequestContainer, StorageAdminRecoveryOperation, StorageAdminServerLocation
 
-HEARTBEAT_SECONDS = 60*100 # TODO make lower
+HEARTBEAT_SECONDS = 30
 
 STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
@@ -43,7 +43,7 @@ class AdminStorageClient(object):
         recoveryMsg.serverA.port = portA
         recoveryMsg.serverB.host = hostB
         recoveryMsg.serverB.port = portB
-        self._send(serverMsg, StorageAdminRequestContainer.RECOVER_FROM)
+        self._send(recoveryMsg, StorageAdminRequestContainer.RECOVER_FROM)
         return self._checkResponse()
 
 class Connection(object):
@@ -88,7 +88,8 @@ class RaidGroup(object):
         print 'servers started'
         
     def _recover(self, server1, server2):
-        newServer = STAND_BY_LIST.pop()
+        newServer = STAND_BY_LIST.pop() # TODO, try to find server other than current hosts...
+        print 'recover data to new server:', newServer
         newServer.recoverDataFrom(server1, server2)
         return newServer
         
@@ -105,15 +106,15 @@ class RaidGroup(object):
         
     def check(self):
         if self.serverA is not None and not self.serverA.sendHeartbeat():
-            print 'Recover server A'
+            print 'Recover server A', self.serverA
             self.serverA = self._recoverServer(self.serverB, self.xorServer)
         
         if self.serverB is not None and not self.serverB.sendHeartbeat():
-            print 'Recover server B'
+            print 'Recover server B', self.serverB
             self.serverB = self._recoverServer(self.serverA, self.xorServer)
         
         if self.xorServer is not None and not self.xorServer.sendHeartbeat():
-            print 'Recover XOR server'
+            print 'Recover XOR server', self.xorServer
             self.xorServer = self._recoverXORServer()
             
     def __repr__(self):
@@ -164,6 +165,8 @@ def testSetup():
     addServer('localhost', 8080, 8081)
     addServer('localhost', 8082, 8083)
     addServer('localhost', 8084, 8085)
+    addServer('localhost', 8086, 8087)
+    
     print 'STAND_BY_LIST', STAND_BY_LIST
     startNewGroup(True)
     print 'ACTIVE_LIST', ACTIVE_LIST

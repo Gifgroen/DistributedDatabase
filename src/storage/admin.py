@@ -56,9 +56,12 @@ class StorageAdminRequestHandler(object):
     
     def _handleRecovery(self, recoveryMsg):
         log.msg("Handle recovery")
-        connectionA = SimpleStorageTestClient(recoveryMsg.hostA, recoveryMsg.portA)
-        connectionB = SimpleStorageTestClient(recoveryMsg.hostB, recoveryMsg.portB)
-        self._recover(self, connectionA, connectionB)
+        a = recoveryMsg.serverA
+        b = recoveryMsg.serverB
+        log.msg("Recover from %s and %s" % (a, b)) 
+        connectionA = SimpleStorageTestClient(a.host, a.port)
+        connectionB = SimpleStorageTestClient(b.host, b.port)
+        self._recover(connectionA, connectionB)
 
 
 class StorageAdminServer(FixedLengthMessageServer):
