@@ -37,17 +37,17 @@ class StorageAdminRequestHandler(object):
         self.protocol.writeMsg(reply)
         
     def _handleSetXORServer(self, serverMsg):
-        log.msg("Handle set XOR server")
+        #log.msg("Handle set XOR server")
         storageServer = self.protocol.factory.storageServer
         if storageServer.factory.xor_server_connection is not None:
             storageServer.factory.xor_server_connection.stop()
-        log.msg('create xor partner connection')
+        #log.msg('create xor partner connection')
         storageServer.factory.xor_server_connection = XORPartnerConnection(serverMsg.host, serverMsg.port)
-        log.msg('.start()')
+        #log.msg('.start()')
         storageServer.factory.xor_server_connection.start()
-        log.msg('relpy')
+        #log.msg('relpy')
         self._reply()
-        log.msg('reply finished')
+        #log.msg('reply finished')
     
     def _recover(self, connA, connB):        
         CHUNK_SIZE = 1024 #1kb

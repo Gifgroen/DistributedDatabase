@@ -13,12 +13,12 @@ class BlockingProtoBufConnection(object):
         self.socket = ssl.wrap_socket(s, ca_certs="sslcert/cert.pem", cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_SSLv23)
     
     def start(self, host, port):
-        log.msg("before socket connection")
+        #log.msg("before socket connection")
         self.socket.connect((host, port))
-        log.msg("socket connected")
+        #log.msg("socket connected")
         # send protocol version
         self.socket.send(pack(STRUCT_BYTE, PROTOCOL_VERSION))
-        log.msg("version byte sent")
+        #log.msg("version byte sent")
         
     def stop(self):
         self.socket.close()
