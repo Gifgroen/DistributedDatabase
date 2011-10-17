@@ -37,7 +37,7 @@ class StorageAdminRequestHandler(object):
     
     def _recover(self, connA, connB):        
         CHUNK_SIZE = 1024 #1kb
-        
+        # TODO
     
     def _handleRecovery(self, recoveryMsg):
         log.msg("Handle recovery")

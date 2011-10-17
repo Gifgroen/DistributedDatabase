@@ -69,6 +69,9 @@ class Connection(object):
             server1.host, server1.clientPort,
             server2.host, server2.clientPort
         )
+        
+    def __repr__(self):
+        return '%s:[%d|%d]' % (self.host, self.clientPort, self.adminPort)
 
 
 class RaidGroup(object):
@@ -105,18 +108,23 @@ class RaidGroup(object):
             print 'Recover server B'
             self.serverB = self._recoverServer(self.serverA, self.xorServer)
         
-        if self.serverXOR is not None and not self.serverXOR.sendHeartbeat():
+        if self.xorServer is not None and not self.xorServer.sendHeartbeat():
             print 'Recover XOR server'
-            self.serverXOR = self._recoverXORServer()
+            self.xorServer = self._recoverXORServer()
             
+    def __repr__(self):
+        return '(A=%s,B=%s,X=%s)' % (self.serverA, self.serverB, self.xorServer)
             
 def heartBeatJob():
     while True:
+        print 'heartBeatJob'
         start = time()
         for group in ACTIVE_LIST:
             group.check()
         # check again in heartbeat time seconds (minus the time the job took)
-        sleep(max(int(time() - start - HEARTBEAT_SECONDS), 0))
+        sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
+        print 'sleep %d seconds' % sleep_secs
+        sleep(sleep_secs)
             
     
 def startup():
@@ -128,19 +136,30 @@ def addServer(host, clientPort, adminPort):
     STAND_BY_LIST.append(newServer)
     
 
-def _createGroup():
+def _createGroup(testing):
     servers = []
     for standby in STAND_BY_LIST:
-        if standby.host not in [server.host for server in servers]:
+        if standby.host not in [server.host for server in servers] or testing:
             servers.append(standby)
             if len(servers) == 3:
                 return servers
 
-def startNewGroup():
-    servers = _createGroup()
+def startNewGroup(testing=False):
+    servers = _createGroup(testing)
     if servers:
+        for server in servers:
+            STAND_BY_LIST.remove(server)
         newGroup = RaidGroup(*servers)
         ACTIVE_LIST.append(newGroup)
         return True
     return False
+    
+def testSetup():
+    startup()
+    addServer('localhost', 8080, 8081)
+    addServer('localhost', 8082, 8083)
+    addServer('localhost', 8083, 8085)
+    startNewGroup(True)
+    print 'ACTIVE_LIST', ACTIVE_LIST
+    print 'STAND_BY_LIST', STAND_BY_LIST
 
