@@ -1,4 +1,5 @@
 from storageclient import SimpleStorageTestClient
+from generic.protobufconnection import BlockingProtoBufConnection
 from threading import Thread
 from time import time, sleep
 
@@ -131,11 +132,11 @@ def _createGroup():
     servers = []
     for standby in STAND_BY_LIST:
         if standby.host not in [server.host for server in servers]:
-            server.append(standby)
+            servers.append(standby)
             if len(servers) == 3:
                 return servers
 
-def startNewGoup():
+def startNewGroup():
     servers = _createGroup()
     if servers:
         newGroup = RaidGroup(*servers)
