@@ -28,9 +28,11 @@ class SimpleStorageTestClient(object):
         msg.header.offset = offset
         msg.header.length = length
         signAndTimestampHashedStorageHeader(msg)
+        print msg
         self.connection.sendMsg(msg)
         
     def writeData(self, offset, data):
+        print 'writeData(%d, %s)' % (offset, data)
         self._sendHeader(offset, len(data), StorageHeader.WRITE)
         self.connection.sendRawBytes(data)
         responseHeader = self.connection.readMsg()

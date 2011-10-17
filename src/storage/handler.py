@@ -36,8 +36,8 @@ class StorageRequestHandler():
         self.protocol = protocol
         self.db = protocol.factory.db
         self.signedHeader = None
-        self.currentWriteOffset = 0
-        self.currentXORWrittenOffset = 0
+        self.currentWriteOffset = None
+        self.currentXORWrittenOffset = None
     
     """
     Validate signedHeader, throws exception if hash is invalid
@@ -53,6 +53,7 @@ class StorageRequestHandler():
         header = self.signedHeader.header
         opp = header.operation
         length = header.length
+        offset = header.offset
         if opp == StorageHeader.READ:
             log.msg('Parsed READ header,  read operation')
             self.db.pushRead(header.offset, header.length, self.diskReadFinished)
@@ -60,9 +61,12 @@ class StorageRequestHandler():
         elif opp == StorageHeader.WRITE:
             if self.protocol.factory.xor_server_connection is None:
                 self._sendExceptionAndDie("XOR server doesn't support replicated WRITE's")
+            self.currentWriteOffset = offset
+            self.currentXORWrittenOffset = offset
             log.msg('Parsed WRITE header, waiting for %d bytes' % length)
             return length
         elif opp == StorageHeader.XOR_WRITE:
+            self.currentWriteOffset = offset
             log.msg('Parsed XOR_WRITE header, waiting for %d bytes' % length)
             return length
         raise Exception("Unkown operation")
@@ -105,6 +109,7 @@ class StorageRequestHandler():
     def parsedMessage(self, msgData):
         self.signedHeader = HashedStorageHeader()
         self.signedHeader.ParseFromString(msgData)
+        log.msg(self.signedHeader)
         self.currentWriteOffset = 0
         self._validateHash()
         return self._handleStorgeHeader()
