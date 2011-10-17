@@ -2,6 +2,8 @@ from generic.communication_pb2 import HashedStorageHeader, StorageHeader, Storag
 from generic.crypto import validateHashedStorageHeader
 
 from twisted.python import log
+from twisted.internet import reactor
+
 
 # TODO timeout for XOR writes, what if it takes to long before a response
 # is received from xor partner.
@@ -80,9 +82,9 @@ class StorageRequestHandler():
     """
     def _sendExceptionAndDie(self, errorString):
         self._sendACK(errorString)
-        # now close and log error
-        raise Exception("%s (is send to client)" % errorString)
-    
+        log.msg("%s (is send to client)" % errorString)
+        self.protocol.transport.loseConnection()
+        
     """
     Send storage acknowledge to client
     if an error string is passed, an error response is send
