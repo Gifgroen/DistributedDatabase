@@ -6,7 +6,7 @@ import socket
 
 from generic.communication_pb2 import StorageAdminResponse, StorageAdminRequestContainer, StorageAdminRecoveryOperation, StorageAdminServerLocation
 
-HEARTBEAT_SECONDS = 30
+HEARTBEAT_SECONDS = 60*100 # TODO make lower
 
 STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
