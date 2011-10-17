@@ -30,30 +30,18 @@ def _setPort(port):
     return port
     
     
-def startStorage(shortkey, xor_host, xor_port, port=None):
+def startStorage(shortkey, port=None, adminPort=None):
     port = _setPort(port)
+    adminPort = _setPort(adminPort)
     if shortkey in storage_instances:
         raise Exception('%s already in running instaces' % shortkey)
-    storage_instances[shortkey] = Popen(["./storageserver.py", "-p", str(port), "-d", shortkey + ".bin", "--xor_host", xor_host, "--xor_port", str(xor_port)])
+    storage_instances[shortkey] = Popen(["./storageserver.py", "-p", str(port), "-a", str(adminPort), "-d", shortkey + ".bin"])
     print 'Created new storage service on port %d' % port
     sleep(3)
     connect("localhost", port, shortkey)
     
 def ss(*args):
     startStorage(*args)
-    
-def startParityStorage(shortkey, port=None):
-    port = _setPort(port)
-    if shortkey in parity_instances:
-        raise Exception('%s already in running instaces' % shortkey)
-    parity_instances[shortkey] = Popen(["./storageserver.py", "-p", str(port), "-d", shortkey + ".bin"])
-    print 'Created new parity service on port %d' % port
-    sleep(3)
-    connect("localhost", port, shortkey)
-
-def sps(shortkey):
-    startParityStorage(shortkey)
-    
     
 def connect(server, port, shortkey):
     if shortkey is None:
@@ -74,21 +62,9 @@ def read(shortkey, offset, length):
         raise Exception('%s does not exist' % shortkey)
     return connections[shortkey].readData(offset, length)
     
-    
-msg1 = "Hello World!"
-msg2 = "Blablablablaaaa"
+
 def setup():
-    sps('xor1')
+    ss('server1')
     sleep(1)
-    ss('server1', 'localhost', 8080)
-    sleep(1)
-    ss('server2', 'localhost', 8080)
-    sleep(3)
-    write('server1', 0, msg1)
-    print read('xor1', 0, len(msg1)) # xor result of smallest message
-    
-    write('server2', 0, msg2)
-    print read('server1', 0, len(msg1))
-    print read('server2', 0, len(msg2))
-    print read('xor1', 0, len(msg1)) # xor result of smallest message
+    ss('server2')
     
