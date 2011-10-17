@@ -13,8 +13,11 @@ class FixedLengthMessageServer(object):
         parser.add_option("-p", "--port", type="int", dest="port", default=8989, help="set server PORT", metavar="PORT")
         
         
-    def __init__(self, options, args):
-        self.port = options.port
+    def __init__(self, options, args, port=None):
+        if port:
+            self.port = port
+        else:
+            self.port = options.port
         self.sslCertificateFile = options.certificateFile
         self.sslPrivateKeyFile = options.privateKeyFile
         self._initFactory()
@@ -25,9 +28,11 @@ class FixedLengthMessageServer(object):
         self.factory.connections = []
         self.factory.server = self
         
-        
-    def run(self):
+    def listen(self):
         reactor.listenSSL(self.port, self.factory,
                           ssl.DefaultOpenSSLContextFactory(
                             self.sslPrivateKeyFile, self.sslCertificateFile))
+        
+    def run(self):
+        self.listen()
         reactor.run()
