@@ -20,7 +20,7 @@ class BlockingProtoBufConnection(object):
         self.socket.close()
         
     def _readNBytes(self, numBytes):
-        print 'read %d bytes' % numBytes
+        #print 'read %d bytes' % numBytes
         msgData = ''
         while len(msgData) != numBytes:
             restLength = numBytes - len(msgData)

@@ -65,6 +65,7 @@ message DictionaryHeader {
 }
 
 // Internal Storage service messages for administration
+// TODO: add hash to ensure that only trusted members can send messages?
 
 message StorageAdminRequestContainer {
     enum Operation {
