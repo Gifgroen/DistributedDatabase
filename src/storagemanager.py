@@ -45,6 +45,9 @@ class AdminStorageClient(object):
         recoveryMsg.serverB.port = portB
         self._send(recoveryMsg, StorageAdminRequestContainer.RECOVER_FROM)
         return self._checkResponse()
+        
+    def stop(self):
+        self.connection.stop()
 
 class Connection(object):
     
@@ -70,6 +73,10 @@ class Connection(object):
             server1.host, server1.clientPort,
             server2.host, server2.clientPort
         )
+        
+    def stop(self):
+        self.client.stop()
+        self.adminClient.stop()
         
     def __repr__(self):
         return '%s:[%d|%d]' % (self.host, self.clientPort, self.adminPort)
@@ -104,6 +111,14 @@ class RaidGroup(object):
         self.serverB.setXORserver(newXORServer)
         return newXORServer
         
+    def stop(self):
+        if self.serverA:
+            self.serverA.stop()
+        if self.serverB:
+            self.serverB.stop()
+        if self.xorServer:
+            self.xorServer.stop()
+        
     def check(self):
         if self.serverA is not None and not self.serverA.sendHeartbeat():
             print 'Recover server A', self.serverA
@@ -122,13 +137,13 @@ class RaidGroup(object):
             
 def heartBeatJob():
     while True:
-        print 'heartBeatJob'
+        #print 'heartBeatJob'
         start = time()
         for group in ACTIVE_LIST:
             group.check()
         # check again in heartbeat time seconds (minus the time the job took)
         sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
-        print 'sleep %d seconds' % sleep_secs
+        #print 'sleep %d seconds' % sleep_secs
         sleep(sleep_secs)
             
     
@@ -162,6 +177,18 @@ def startNewGroup(testing=False):
     
 def testSetup():
     startup()
+    restart()
+    
+def stop():
+    for server in STAND_BY_LIST:
+        server.stop()
+    del STAND_BY_LIST[:]
+    for group in ACTIVE_LIST:
+        group.stop()
+    del ACTIVE_LIST[:]
+    
+def restart():
+    stop()
     addServer('localhost', 8080, 8081)
     addServer('localhost', 8082, 8083)
     addServer('localhost', 8084, 8085)
