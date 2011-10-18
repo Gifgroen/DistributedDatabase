@@ -55,9 +55,11 @@ class StorageAdminRequestHandler(object):
     def _recoverPiece(self, connA, connB, offset, length):
         log.msg("Recover from %d-%d (max: %d)" % (offset, offset+length, self.protocol.factory.databasesize))
         a = connA.readData(offset, length)
+        log.msg("A:", repr(a))
         b = connA.readData(offset, length)
+        log.msg("B:", repr(b))
         result = xorBytes(a, b)
-        log.msg("%s", repr(result))
+        log.msg("result:", repr(result))
         db = self.protocol.factory.storageServer.factory.db
         db.pushWrite(offset, result)
         
