@@ -12,9 +12,14 @@ LAST_PORT = 8080
 storage_instances = {} #shortkey -> Popen
 connections = {} #shortkey -->SimpleStorageTestClient
 
-def exit2():
+
+def terminateAll():
     for instance in storage_instances.values():
         instance.terminate()
+    storage_instances.clear()
+    
+def exit2():
+    terminateAll()
     sleep(1)
     sys.exit()
     
@@ -47,6 +52,10 @@ def connect(server, port, shortkey=None):
         raise Exception('%s already in active connections, choose a new connection name' % shortkey)
     connections[shortkey] = SimpleStorageTestClient(server, port)
     
+def disconnectAll():
+    for conn in connections.values():
+        conn.stop()
+    connections.clear()
     
 def write(shortkey, offset, data):
     if shortkey not in connections:
