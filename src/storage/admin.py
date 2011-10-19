@@ -56,7 +56,7 @@ class StorageAdminRequestHandler(object):
         log.msg("Recover from %d-%d (max: %d)" % (offset, offset+length, self.protocol.factory.databasesize))
         a = connA.readData(offset, length)
         log.msg("A:", repr(a))
-        b = connA.readData(offset, length)
+        b = connB.readData(offset, length)
         log.msg("B:", repr(b))
         result = xorBytes(a, b)
         log.msg("result:", repr(result))
@@ -65,9 +65,9 @@ class StorageAdminRequestHandler(object):
         
     def _recover(self, connA, connB):        
         current_offset = 0
-        while current_offset + RECOVER_CHUNK_SIZE < self.protocol.factory.databasesize:
-            self._recoverPiece(connA, connB, current_offset, RECOVER_CHUNK_SIZE)
-            current_offset += RECOVER_CHUNK_SIZE
+        #while current_offset + RECOVER_CHUNK_SIZE < self.protocol.factory.databasesize:
+        #    self._recoverPiece(connA, connB, current_offset, RECOVER_CHUNK_SIZE)
+        #    current_offset += RECOVER_CHUNK_SIZE
         # recover rest that didn't fit into the last chunk
         restLength = self.protocol.factory.databasesize - current_offset - 1
         if restLength != 0:
