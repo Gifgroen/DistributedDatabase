@@ -9,7 +9,7 @@ from twisted.python import log
 
 from util import xorBytes
 
-RECOVER_CHUNK_SIZE = 1024*1024 #1mb
+RECOVER_CHUNK_SIZE = 1024*1024*1 #10mb
 
 class StorageAdminRequestHandler(object):
     def __init__(self, protocol):

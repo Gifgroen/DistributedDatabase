@@ -2,7 +2,7 @@ from Queue import Queue, Empty
 
 from twisted.internet import reactor
 from twisted.python import log
-from util import xorBytes, byteValue
+from util import xorBytes, byteValue, truncateString
 
 
 class StorageDatabase(object):
@@ -20,7 +20,11 @@ class StorageDatabase(object):
         
     def _initDBFile(self):
         self.dbFile = open(self.filename, 'w+b')
-        self.dbFile.write('\0' * self.size)
+        # without sparse filesystem:
+        #self.dbFile.write('\0' * self.size)
+        # with sparse filesytem:
+        self.dbFile.seek(self.size)
+        self.dbFile.write('\0')
     
     """
     Starts the database worker.
@@ -58,7 +62,7 @@ class StorageDatabase(object):
     """
     def pushWrite(self, offset, data):
         assert offset + len(data) < self.size
-        log.msg("pushWrite(%d, %s)" % (offset, repr(data)))
+        log.msg("pushWrite(%d, %s)" % (offset, truncateString(repr(data))))
         self.work_queue.put((self._handleWrite, offset, data))
 
     """
@@ -70,7 +74,7 @@ class StorageDatabase(object):
     """
     def pushXORWrite(self, offset, data):
         assert offset + len(data) < self.size
-        log.msg("pushXORWrite(%d, %s)" % (offset, repr(data)))
+        log.msg("pushXORWrite(%d, %s)" % (offset, truncateString(repr(data))))
         self.work_queue.put((self._handleXORWrite, offset, data))
         
     """
@@ -83,7 +87,7 @@ class StorageDatabase(object):
     """
     def pushXORRead(self, offset, data, callback, *args):
         assert offset + len(data) < self.size
-        log.msg("pushXORRead(%d, %s)" % (offset, repr(data)))
+        log.msg("pushXORRead(%d, %s)" % (offset, truncateString(repr(data))))
         self.work_queue.put((self._handleXORRead,
             offset, data, callback, args))
     

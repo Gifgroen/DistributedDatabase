@@ -11,6 +11,7 @@ HEARTBEAT_SECONDS = 10 # low for testing
 STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
 
+TEST_MODE = True # disables checking for hosts
 
 class AdminStorageClient(object):
     def __init__(self, host, port):
@@ -94,15 +95,19 @@ class RaidGroup(object):
         self.serverB.setXORServer(x)
         print 'servers started'
         
+        # TODO notify freelist about free space
+        
     def _recover(self, server1, server2):
-        newServer = STAND_BY_LIST.pop() # TODO, try to find server other than current hosts...
+        newServer = _createGroup([server1, server2])[2]
+        STAND_BY_LIST.remove(newServer)
         print 'recover data to new server:', newServer
         newServer.recoverDataFrom(server1, server2)
         return newServer
         
-    def _recoverServer(self, runningServer, xor):
+    def _recoverServer(self, deadServer, runningServer, xor):
         newServer = self._recover(runningServer, xor)
         newServer.setXORServer(self.xorServer)
+        # TODO, send update to dictionary service and freelist
         return newServer
         
     def _recoverXORServer(self):
@@ -122,11 +127,11 @@ class RaidGroup(object):
     def check(self):
         if self.serverA is not None and not self.serverA.sendHeartbeat():
             print 'Recover server A', self.serverA
-            self.serverA = self._recoverServer(self.serverB, self.xorServer)
+            self.serverA = self._recoverServer(self.serverA, self.serverB, self.xorServer)
         
         if self.serverB is not None and not self.serverB.sendHeartbeat():
             print 'Recover server B', self.serverB
-            self.serverB = self._recoverServer(self.serverA, self.xorServer)
+            self.serverB = self._recoverServer(self.serverB, self.serverA, self.xorServer)
         
         if self.xorServer is not None and not self.xorServer.sendHeartbeat():
             print 'Recover XOR server', self.xorServer
@@ -156,24 +161,26 @@ def addServer(host, clientPort, adminPort):
     STAND_BY_LIST.append(newServer)
     
 
-def _createGroup(testing):
-    servers = []
+def _createGroup(servers = None):
+    if not servers:
+        servers = []
     for standby in STAND_BY_LIST:
-        if standby.host not in [server.host for server in servers] or testing:
+        if standby.host not in [server.host for server in servers] or TEST_MODE:
+            print 'add', standby, servers
             servers.append(standby)
             if len(servers) == 3:
                 return servers
+    raise Exception("Not enough standby servers available...")
 
-def startNewGroup(testing=False):
-    servers = _createGroup(testing)
+
+def startNewGroup():
+    servers = _createGroup()
     print servers
-    if servers:
-        for server in servers:
-            STAND_BY_LIST.remove(server)
-        newGroup = RaidGroup(*servers)
-        ACTIVE_LIST.append(newGroup)
-        return True
-    return False
+    for server in servers:
+        STAND_BY_LIST.remove(server)
+    newGroup = RaidGroup(*servers)
+    ACTIVE_LIST.append(newGroup)
+
     
 def testSetup():
     startup()
@@ -195,6 +202,6 @@ def restart():
     addServer('localhost', 8086, 8087)
     
     print 'STAND_BY_LIST', STAND_BY_LIST
-    startNewGroup(True)
+    startNewGroup()
     print 'ACTIVE_LIST', ACTIVE_LIST
 
