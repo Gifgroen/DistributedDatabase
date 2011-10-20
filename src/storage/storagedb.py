@@ -20,7 +20,11 @@ class StorageDatabase(object):
         
     def _initDBFile(self):
         self.dbFile = open(self.filename, 'w+b')
-        self.dbFile.write('\0' * self.size)
+        # without sparse filesystem:
+        #self.dbFile.write('\0' * self.size)
+        # with sparse filesytem:
+        self.dbFile.seek(self.size)
+        self.dbFile.write('\0')
     
     """
     Starts the database worker.
