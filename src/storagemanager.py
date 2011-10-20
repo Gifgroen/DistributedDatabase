@@ -95,6 +95,8 @@ class RaidGroup(object):
         self.serverB.setXORServer(x)
         print 'servers started'
         
+        # TODO notify freelist about free space
+        
     def _recover(self, server1, server2):
         newServer = _createGroup([server1, server2])[2]
         STAND_BY_LIST.remove(newServer)
@@ -102,9 +104,10 @@ class RaidGroup(object):
         newServer.recoverDataFrom(server1, server2)
         return newServer
         
-    def _recoverServer(self, runningServer, xor):
+    def _recoverServer(self, deadServer, runningServer, xor):
         newServer = self._recover(runningServer, xor)
         newServer.setXORServer(self.xorServer)
+        # TODO, send update to dictionary service and freelist
         return newServer
         
     def _recoverXORServer(self):
@@ -124,11 +127,11 @@ class RaidGroup(object):
     def check(self):
         if self.serverA is not None and not self.serverA.sendHeartbeat():
             print 'Recover server A', self.serverA
-            self.serverA = self._recoverServer(self.serverB, self.xorServer)
+            self.serverA = self._recoverServer(self.serverA, self.serverB, self.xorServer)
         
         if self.serverB is not None and not self.serverB.sendHeartbeat():
             print 'Recover server B', self.serverB
-            self.serverB = self._recoverServer(self.serverA, self.xorServer)
+            self.serverB = self._recoverServer(self.serverB, self.serverA, self.xorServer)
         
         if self.xorServer is not None and not self.xorServer.sendHeartbeat():
             print 'Recover XOR server', self.xorServer
