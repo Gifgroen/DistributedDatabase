@@ -7,3 +7,6 @@ def xorBytes(a, b):
     
 def byteValue(bytes):
     return [ord(byte) for byte in bytes]
+
+def truncateString(data, length=50):    
+    return (data[:length] + '..') if len(data) > length else data
