@@ -161,9 +161,12 @@ def addServer(host, clientPort, adminPort):
     STAND_BY_LIST.append(newServer)
     
 
-def _createGroup(servers = []):
+def _createGroup(servers = None):
+    if not servers:
+        servers = []
     for standby in STAND_BY_LIST:
         if standby.host not in [server.host for server in servers] or TEST_MODE:
+            print 'add', standby, servers
             servers.append(standby)
             if len(servers) == 3:
                 return servers
