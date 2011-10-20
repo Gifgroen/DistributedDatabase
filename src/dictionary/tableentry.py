@@ -34,7 +34,7 @@ class LocationEntry(object):
         return dataLocation
 
     def __repr__(self):
-        return '%s %s' % (self.dataLocation, self.isWritten)
+        return '%s:%s Offset:%s Length:%s Written:%s' % (self.host, self.port, self.offset, self.length, self.isWritten)
 
     def toWriteMessage(self):
         msg = self.toMessage()

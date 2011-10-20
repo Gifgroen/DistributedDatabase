@@ -44,6 +44,7 @@ class LocationHandler:
             rhead.status = DictionaryResponseHeader.OK
             for loc in locs:
                 rhead.locations.extend([loc.toReadMessage()])
+
         return rhead
 
     """
@@ -52,24 +53,24 @@ class LocationHandler:
         action   -> ADD entry in filetable
         response -> Location message (WRITE)
     """
-    def handleADD(self):
+    def handleADD(self):       
         # get space from freelist
-        loc = self.fl.allocSpace(self.requestHeader.size)
-
-        self.filetable.add(self.requestHeader.key, **loc)
+        locs = self.fl.allocSpace(self.requestHeader.size)
+        
+        # generate a random key
+        key = str(uuid.uuid4())
+        for loc in locs:
+            self.filetable.add(key, **loc)
         
         rhead = DictionaryResponseHeader()
         rhead.status = DictionaryResponseHeader.OK
-        
-        # generate a random key
-        rhead.key = uuid.uuid4()
+        rhead.key = key
+        rhead.locations.extend([])
         
         # if my responsibility
         #   -> store
         # else
         #   -> forward to responsible server
-        
-        rhead.locations.extend([])
 
         return rhead
 

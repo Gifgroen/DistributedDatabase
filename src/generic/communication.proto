@@ -95,3 +95,10 @@ message StorageAdminResponse {
     optional string errorMsg = 2; // is set if status == ERROR
 }
 
+// Internal dictionary service messages for administration
+
+message DictionaryAdminServerLocation {
+    required string host = 1;
+    required uint64 port = 2;
+}
+

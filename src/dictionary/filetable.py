@@ -10,7 +10,6 @@ class DictionaryTable(object):
     Create a location table that maps DB keys to a physical location
     """
     def __init__(self):
-        # key -> [tableentrie]
         self.locationDict = {}
 
     """
@@ -21,7 +20,7 @@ class DictionaryTable(object):
         if key not in self.locationDict:
             self.locationDict[key] = []
         self.locationDict[key].append(LocationEntry(hostname, port, offset, length))
-            
+
 
     """
     Get a location from the locationDict

@@ -22,7 +22,6 @@ class DictionaryServer(FixedLengthMessageServer):
         self.factory.delegate = LocationHandler()
 
 if __name__ == '__main__':
-    
     parser = OptionParser()
     DictionaryServer.addServerOptions(parser)
 
@@ -34,9 +33,12 @@ if __name__ == '__main__':
     if options.verbose:
         log.startLogging(sys.stdout)
     
+    # The actual DictServer that does all the work
     server = DictionaryServer(options, args)
     server.listen()
+    # The manager that receives messages from the dictionaryManager
     adminServer = DictionaryAdminServer(options, args, server)
     adminServer.listen()
 
+    # Run all services
     reactor.run()
