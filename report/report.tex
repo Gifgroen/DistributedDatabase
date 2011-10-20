@@ -1,0 +1,56 @@
+\documentclass[12pt,a4paper]{scrartcl}
+\usepackage[english]{babel}
+\usepackage{url}
+\usepackage{graphicx}
+
+\title{\large{Highly Available, Distributed and Fault Tolerant Storage System} \\ \normalsize{Distributed Systems 2011}}
+\author{Karsten Westra\\1693905 \and Edwin-Jan Harmsma\\1735535}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\clearpage
+
+
+% @karsten: ik heb 'problem statement' en 'state of the art' omgewisseld
+% omdat ik state of the art meer bij solution vind horen...
+
+\section{Context}
+% basics principles of storage systems
+% key->value, distributed file systems, memcache
+% introduce fault-tolerance (replication) and scalability
+
+\section{Problem statement}
+% introduce all requirements of our system
+% communication between different platforms
+
+\section{State of the Art}
+% introduce XOR idea (raid4 and raid5)
+% asynchronous client-server, FIFO channels
+% binary header-based protocol (platform independent)
+
+\section{Solution details}
+% overal architecture: layer architecture (see diagram other document)
+\subsection{Storage service}
+\subsection{Dictionary service}
+\subsection{Freelist service}
+\subsection{Front-end / proxy}
+\subsection{Client}
+
+\section{Results}
+% discuss also the properties that are explained in the DS lectures
+
+\section{Future improvements}
+% system heavily relies on system clock (signing security) --> internal clock synchronization between components, is not implemented due the lack of time
+
+% storage service:
+% Remove blocking code between storageservice and parity server --> show blocking problem by sequence diagram, same for recovery
+% Private key meganism, now every server has its own private key which is a big security issue --> only operation,offset,length/data are signed, NOT HOST/PORT!
+
+
+\bibliographystyle{plain}
+\bibliography{ref}
+\nocite{*}
+
+\end{document}
