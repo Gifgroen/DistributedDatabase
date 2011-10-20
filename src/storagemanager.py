@@ -98,7 +98,6 @@ class RaidGroup(object):
     def _recover(self, server1, server2):
         newServer = _createGroup([server1, server2])[2]
         STAND_BY_LIST.remove(newServer)
-        #newServer = STAND_BY_LIST.pop() # TODO, try to find server other than current hosts...
         print 'recover data to new server:', newServer
         newServer.recoverDataFrom(server1, server2)
         return newServer
