@@ -2,14 +2,16 @@
 
 import sys
 from optparse import OptionParser
+
 from twisted.python import log
+from twisted.internet import reactor
 
 from generic.genericserver import FixedLengthMessageServer
 from generic.protocol import BinaryMessageProtocol
 
 from dictionary.handler import DictionaryRequestHandler
 from dictionary.server import LocationHandler
-
+from dictionary.admin import DictionaryAdminServer
 
 class DictionaryServer(FixedLengthMessageServer):
     def __init__(self, options, args):
@@ -23,12 +25,18 @@ if __name__ == '__main__':
     
     parser = OptionParser()
     DictionaryServer.addServerOptions(parser)
+
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help="don't print status messages to stdout")
+    parser.add_option("-a", "--adminport", type="int", dest="admin_port", help="Port of admin server")
     
     (options, args) = parser.parse_args()
     
     if options.verbose:
         log.startLogging(sys.stdout)
     
-    server = DictionaryServer(options, args)    
-    server.run()
+    server = DictionaryServer(options, args)
+    server.listen()
+    adminServer = DictionaryAdminServer(options, args, server)
+    adminServer.listen()
+
+    reactor.run()

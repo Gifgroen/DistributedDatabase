@@ -6,30 +6,46 @@ from storage.handler import copyHeaderData
 An entry in the dictionaryTable
 """
 class LocationEntry(object):
-	"""
-	An entry is initialized with a key and a location where the data is stored
-	"""
-	def __init__(self, host, port, offset, length):
-	    self.isWritten = False
+    """
+    An entry is initialized with a key and a location where the data is stored
+    """
+    def __init__(self, host, port, offset, length):
+        self.isWritten = False
+        self.host = host
+        self.port = port
+        self.offset = offset
+        self.length = length
 
-	    self.dataLocation = DataLocation()
-	    self.dataLocation.host = host
-	    self.dataLocation.port = port
+    def toDict(self):
+        return {
+            "host": self.host,
+            "port": self.port,
+            "offset": self.offset,
+            "length": self.length,
+        }
 
-	    self.dataLocation.header.header.offset = offset
-	    self.dataLocation.header.header.length = length
+    def toMessage(self):
+        dataLocation = DataLocation()
+        dataLocation.host = self.host
+        dataLocation.port = self.port
+        dataLocation.header.header.offset = self.offset
+        dataLocation.header.header.length = self.length
+        
+        return dataLocation
 
-	def __repr__(self):
-	    return '%s %s' % (self.dataLocation, self.isWritten)
+    def __repr__(self):
+        return '%s %s' % (self.dataLocation, self.isWritten)
 
-	def toWriteMessage(self):
-	    self.dataLocation.header.header.operation = StorageHeader.WRITE
-	    return self._toDataLocationMessage()
-	    
-	def toReadMessage(self):
-	    self.dataLocation.header.header.operation = StorageHeader.READ
-	    return self._toDataLocationMessage()
+    def toWriteMessage(self):
+        msg = self.toMessage()
+        msg.header.header.operation = StorageHeader.WRITE
+        return self._toDataLocationMessage(msg)
+        
+    def toReadMessage(self):
+        msg = self.toMessage()
+        msg.header.header.operation = StorageHeader.READ
+        return self._toDataLocationMessage(msg)
 
-	def _toDataLocationMessage(self):
-	    signAndTimestampHashedStorageHeader(self.dataLocation.header)
-	    return self.dataLocation
+    def _toDataLocationMessage(self, msg):
+        signAndTimestampHashedStorageHeader(msg.header)
+        return msg

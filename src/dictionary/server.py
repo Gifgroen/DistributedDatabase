@@ -5,12 +5,18 @@ All request messages return en LocationResponseHeader message
 -> See layout in communication.proto
 """
 from generic.communication_pb2 import DictionaryResponseHeader, DictionaryHeader
+
 from dictionary.filetable import DictionaryTable
+
+from freelist.spacetable import FreeList
+
+import uuid
 
 class LocationHandler:
     def __init__(self):
         self.requestHeader = None
         self.filetable = DictionaryTable()
+        self.fl = FreeList()
 
     def handleRequest(self, header):
         self.requestHeader = header
@@ -47,17 +53,26 @@ class LocationHandler:
         response -> Location message (WRITE)
     """
     def handleADD(self):
-        key = self.filetable.add(self.requestHeader.size)
+        # get space from freelist
+        loc = self.fl.allocSpace(self.requestHeader.size)
+
+        self.filetable.add(self.requestHeader.key, **loc)
         
         rhead = DictionaryResponseHeader()
         rhead.status = DictionaryResponseHeader.OK
-        rhead.key = key
+        
+        # generate a random key
+        rhead.key = uuid.uuid4()
+        
+        # if my responsibility
+        #   -> store
+        # else
+        #   -> forward to responsible server
+        
         rhead.locations.extend([])
 
         return rhead
-        # TODO: look in freelist and set in filetable
 
-        # TODO: Build proper response
 
     """
     Handle DELETE request
@@ -66,6 +81,13 @@ class LocationHandler:
         -> response: OK message
     """
     def handleDELETE(self):
+        # get the LocationEntry to free in freelist
+        locs = self.filetable.get(self.requestHeader.key)
+
+        # Release in freelist
+        for loc in locs:
+            self.fl.releaseSpace(**loc.toDict())
+        
         rhead = DictionaryResponseHeader()
         rhead.status = DictionaryResponseHeader.OK
         
@@ -73,8 +95,5 @@ class LocationHandler:
         status = self.filetable.delete(self.requestHeader.key)
         if status == False:
             rhead.status = DictionaryResponseHeader.NOT_EXISTING_KEY
-        rhead.locations.extend([])
 
         return rhead
-
-        # TODO: Build proper response
