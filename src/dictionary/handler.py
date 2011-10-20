@@ -12,10 +12,6 @@ Message handler that parses a message and delegates request
 class DictionaryRequestHandler():
     def __init__(self, protocol):
         self.protocol = protocol
-        # LocationHandler must be shared among ALL requests
-        # and not be created for every request!
-        # So define it inside the server (in the factory).
-        # self.delegate = LocationHandler()
 
     def parsedMessage(self, msgData):
         requestMessage = DictionaryHeader()

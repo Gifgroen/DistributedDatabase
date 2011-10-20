@@ -1,6 +1,6 @@
 from tableentry import LocationEntry
 
-import freelist.memtable as memtable
+import freelist.spacetable as spacetable
 
 """
 The distributed filetable of a Dictionary server that maps keys to locations
@@ -17,23 +17,20 @@ class DictionaryTable(object):
     Add an entry in the DictionaryTable
 	@return: the reference location under which the data is stored
     """
-    def add(self, sizeOfData):
-        # get space from freelist
-        loc = memtable.getFreeSpace(sizeOfData)
-        self.locationDict[loc["key"]] = LocationEntry(loc["hostname"], loc["port"], loc["offset"], loc["length"])
-
-        # TODO return location
-        return loc['key']
+    def add(self, key, hostname, port, offset, length):
+        if key not in self.locationDict:
+            self.locationDict[key] = []
+        self.locationDict[key].append(LocationEntry(hostname, port, offset, length))
+            
 
     """
     Get a location from the locationDict
 	@return: the location of the StorageServer that has the requested data
     """
     def get(self, key):
-        print 'get', key, self.locationDict
         if key in self.locationDict:
-            return [self.locationDict[key]]
-        return None
+            return self.locationDict[key]
+        return []
     
     """
     Delete an entry (or key) from the location table. 
@@ -41,19 +38,9 @@ class DictionaryTable(object):
 	@return an acknowledgement message (OK, FAIL, ...)
     """
     def delete(self, key):
-        if key not in self.locationDict:
-            return False
+        if key in self.locationDict:
+            del self.locationDict[key]
+            return True
+        return False
 
-        # get the location to free in freelist
-        loc = self.locationDict[key]
-        # Release in freelist
-        memtable.releaseSpace(loc)
-        del(loc)
-        return True
-
-            
-        
-
-        
-        # TODO: Create Notification message and notify freelist
         
