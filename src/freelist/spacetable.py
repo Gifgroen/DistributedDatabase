@@ -9,7 +9,6 @@ class FreeList:
             "port": 65565, 
             "offset": 42,
             "length": sizeOfData,
-            #"key": "0xDEADBEEF"
         }
         
     def releaseSpace(self, host, port, offset, length):
