@@ -39,6 +39,7 @@ class SimpleStorageTestClient(object):
         if responseHeader.status == StorageResponseHeader.OK:
             return True
         print responseHeader.errorMsg
+        self.stop()
         return False
         
     def readData(self, offset, length):
@@ -47,6 +48,7 @@ class SimpleStorageTestClient(object):
         if responseHeader.status == StorageResponseHeader.OK:
             return self.connection.readNBytes(responseHeader.header.length)
         print responseHeader.errorMsg
+        self.stop()
         return None
         
     def stop(self):

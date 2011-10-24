@@ -60,10 +60,12 @@ def disconnectAll():
 def write(shortkey, offset, data):
     if shortkey not in connections:
         raise Exception('%s does not exist' % shortkey)
-    connections[shortkey].writeData(offset, data)
+    if not connections[shortkey].writeData(offset, data):
+        del connections[shortkey]
     
     
 def read(shortkey, offset, length):
     if shortkey not in connections:
         raise Exception('%s does not exist' % shortkey)
-    return connections[shortkey].readData(offset, length)
+    if not connections[shortkey].readData(offset, length):
+        del connections[shortkey] 
