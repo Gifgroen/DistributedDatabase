@@ -60,7 +60,8 @@ class DictionaryAdminClient(object):
 
 if __name__ == "__main__":
     # the dictionary admin client to which we want to connect
-    cli = DictionaryAdminClient("localhost", 8282)
-    print cli.setReplicaServer("localhost", 8286)
+    cli = DictionaryAdminClient("localhost", 8088)
+    print cli.setReplicaServer("localhost", 8083)
+    print cli.setReplicaServer("localhost", 8085)
     cli.stop()
     
