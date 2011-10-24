@@ -47,7 +47,7 @@ class StorageRequestHandler():
         # explicit type checing of True is necessary since a string
         # is returned on error
         if validationResult is not True:
-            self._sendExceptionAndClose("Hash validation error: %s" % validationResult)
+            self._sendExceptionAndDie("Hash validation error: %s" % validationResult)
         
     def _handleStorgeHeader(self):
         header = self.signedHeader.header
