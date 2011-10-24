@@ -60,6 +60,7 @@ class LocationHandler:
         
         # generate a random key
         key = str(uuid.uuid4())
+        print key
         for loc in locs:
             self.filetable.add(key, **loc)
 

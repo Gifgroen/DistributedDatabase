@@ -6,6 +6,11 @@ from twisted.internet import reactor
 
 # init new slave and notify dictServer
 
+HEARTBEAT_SECONDS = 10 # low for testing
+
+STAND_BY_LIST = [] # Connections
+ACTIVE_LIST = [] # Raidgroups
+
 class DictionaryAdminClient(object):
     """
     Host and port are the Admin client to which we want to connect

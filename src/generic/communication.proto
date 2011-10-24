@@ -115,8 +115,6 @@ message DictionaryKeys {
 message RequestContainer {
     enum Operation {
         NEW_SLAVE = 1;
-        GET_KEYS = 2;
-        GET_REPLICAS = 3;
     }
     required Operation operation = 1;
     optional bytes messageData = 2;

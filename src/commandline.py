@@ -5,6 +5,7 @@ Import this module in a python terminal
 import sys, traceback
 from time import sleep
 from storageclient import SimpleStorageTestClient
+from dictionaryclient import DictionaryClient
 from subprocess import Popen
 
 LAST_PORT = 8080
@@ -12,11 +13,16 @@ LAST_PORT = 8080
 storage_instances = {} #shortkey -> Popen
 connections = {} #shortkey -->SimpleStorageTestClient
 
+dictionary_instances = {} #shortkey -> Popen
+dictionary_connections = {}
 
 def terminateAll():
     for instance in storage_instances.values():
         instance.terminate()
     storage_instances.clear()
+    for instance in dictionary_instances.values():
+        instance.terminate()
+    dictionary_instances.clear()
     
 def exit2():
     terminateAll()
@@ -44,19 +50,66 @@ def startStorage(shortkey, port=None, adminPort=None):
     
 def ss(*args):
     startStorage(*args)
-    
-def connect(server, port, shortkey=None):
+
+"""
+New connect message:
+-> service = 'dictionary' of 'storage' (Lekker generiek :D )
+"""
+def connect(service, host, port, shortkey=None):
+    if service is 'dictionary':
+        connectDictionary(host, port, shortkey)
+    elif service is 'storage':
+        connectStorage(host, port, shortkey)
+
+def connectStorage(server, port, shortkey=None):
     if shortkey is None:
         shortkey = '%s:%d' % (server, port)
     if shortkey in connections:
         raise Exception('%s already in active connections, choose a new connection name' % shortkey)
     connections[shortkey] = SimpleStorageTestClient(server, port)
-    
+
+def connectDictionary(server, port, shortkey=None):
+    if shortkey is None:
+        shortkey = '%s:%d' % (server, port)
+    if shortkey in dictionary_connections:
+        raise Exception('%s already in active dictionary connections, choose a new connection name' % shortkey)
+    dictionary_connections[shortkey] = DictionaryClient(server, port)
+
+"""
+Disconnect all possible services
+"""
 def disconnectAll():
     for conn in connections.values():
         conn.stop()
     connections.clear()
+    for conn in dictionary_connections.values():
+        conn.stop()
+    dictionary_connections.clear()
+
+def add(shortkey, size):
+    if shortkey not in dictionary_connections:
+        raise Exception('%s does not exist' % shortkey)
+    status, key = dictionary_connections[shortkey].doADD(size)
+    if not status:
+        del dictionary_connections[shortkey]
+    print key
     
+def delete(shortkey, key):
+    if shortkey not in dictionary_connections:
+        raise Exception('%s does not exist' % shortkey)
+    status, key = dictionary_connections[shortkey].doDELETE(key)
+    if not status:
+        del dictionary_connections[shortkey]
+    print key
+
+def get(shortkey, key):
+    if shortkey not in dictionary_connections:
+        raise Exception('%s does not exist' % shortkey)
+    status, locations = dictionary_connections[shortkey].doGET(key)
+    if not status:
+        del dictionary_connections[shortkey]
+    print locations
+
 def write(shortkey, offset, data):
     if shortkey not in connections:
         raise Exception('%s does not exist' % shortkey)

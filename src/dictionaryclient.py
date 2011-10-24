@@ -28,33 +28,54 @@ class DictionaryClient(object):
     def getKey(self):
         return self.key
         
-    def sendADD(self, sizeOfData):
+    def doADD(self, sizeOfData):
         req = DictionaryHeader()
         req.size = sizeOfData
-        req.key = "foobar"  # REMOVE AFTER TESTING, RESULTS IN BAD BEHAVIOUR IN PRODUCTION ENV
+        #req.key = "foobar"  # REMOVE AFTER TESTING, RESULTS IN BAD BEHAVIOUR IN PRODUCTION ENV
         req.operation = DictionaryHeader.ADD
         
         self.sendRequest(req)
         response = self.readMsg()
-        self.key = response.key
+        if response.status == DictionaryResponseHeader.OK:
+            self.key = response.key
+            return True, response.key
         
-        return response
+        print responseHeader.status
+        self.stop()
+        return False, None
         
-    def sendGET(self, key):
+    def doGET(self, key):
         req = DictionaryHeader()
         req.operation = DictionaryHeader.GET
         req.key = key
 
         self.sendRequest(req)
-        return self.readMsg()
         
-    def sendDELETE(self, key):
+        response = self.readMsg()
+        if response.status == DictionaryResponseHeader.OK:
+            return True, response
+            
+        print response.status
+        self.stop()
+        return False, None
+        
+    def doDELETE(self, key):
         req = DictionaryHeader()
         req.operation = DictionaryHeader.DELETE
         req.key = key
 
         self.sendRequest(req)
-        return self.readMsg()
+        response = self.readMsg()
+        
+        if response.status == DictionaryResponseHeader.OK:
+            return True, response
+        
+        print response.status
+        self.stop()
+        return False, None
+
+    def stop(self):
+        self.connection.stop()
         
 
 if __name__ == '__main__':
@@ -62,9 +83,9 @@ if __name__ == '__main__':
     dictCLI = DictionaryClient(HOST, PORT)
     
     size = 59863
-    print dictCLI.sendADD(size)
-    print dictCLI.sendGET(dictCLI.getKey())
-    print dictCLI.sendDELETE(dictCLI.getKey())
+    print dictCLI.doADD(size)
+    print dictCLI.doGET(dictCLI.getKey())
+    print dictCLI.doDELETE(dictCLI.getKey())
    
 
     print 'closed'
