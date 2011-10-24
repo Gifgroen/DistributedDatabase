@@ -31,12 +31,14 @@ class DictionaryClient(object):
     def sendADD(self, sizeOfData):
         req = DictionaryHeader()
         req.size = sizeOfData
+        req.key = "foobar"  # REMOVE AFTER TESTING, RESULTS IN BAD BEHAVIOUR IN PRODUCTION ENV
         req.operation = DictionaryHeader.ADD
         
         self.sendRequest(req)
         response = self.readMsg()
         self.key = response.key
-        print "RESPONSE: ", response, "\n"
+        
+        return response
         
     def sendGET(self, key):
         req = DictionaryHeader()
@@ -44,8 +46,7 @@ class DictionaryClient(object):
         req.key = key
 
         self.sendRequest(req)
-        response = self.readMsg()
-        print "RESPONSE: ", response, "\n"
+        return self.readMsg()
         
     def sendDELETE(self, key):
         req = DictionaryHeader()
@@ -53,8 +54,7 @@ class DictionaryClient(object):
         req.key = key
 
         self.sendRequest(req)
-        response = self.readMsg()
-        print "RESPONSE: ", response, "\n"
+        return self.readMsg()
         
 
 if __name__ == '__main__':
@@ -62,9 +62,9 @@ if __name__ == '__main__':
     dictCLI = DictionaryClient(HOST, PORT)
     
     size = 59863
-    dictCLI.sendADD(size)
-    dictCLI.sendGET(dictCLI.getKey())
-    dictCLI.sendDELETE(dictCLI.getKey())
+    print dictCLI.sendADD(size)
+    print dictCLI.sendGET(dictCLI.getKey())
+    print dictCLI.sendDELETE(dictCLI.getKey())
    
 
     print 'closed'

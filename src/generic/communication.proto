@@ -97,8 +97,33 @@ message StorageAdminResponse {
 
 // Internal dictionary service messages for administration
 
-message DictionaryAdminServerLocation {
-    required string host = 1;
-    required uint64 port = 2;
+// GENERALIZE TO STORAGE ADMIN?
+message AdminResponse {
+    enum Status {
+        OK = 1;
+        ERROR = 2;
+    }
+    required Status status = 1;
+    optional string errorMsg = 2; // is set if status == ERROR
+}
+
+message DictionaryKeys {
+    repeated string keys = 1;
+    required AdminResponse response = 2;
+}
+
+message RequestContainer {
+    enum Operation {
+        NEW_SLAVE = 1;
+        GET_KEYS = 2;
+        GET_REPLICAS = 3;
+    }
+    required Operation operation = 1;
+    optional bytes messageData = 2;
+}
+
+message DictionaryReplicaLocation {
+    required string host = 2;
+    required uint64 port = 3;
 }
 

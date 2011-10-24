@@ -2,6 +2,7 @@
 
 import sys
 from optparse import OptionParser
+from Queue import Queue, Empty
 
 from twisted.python import log
 from twisted.internet import reactor
@@ -12,6 +13,7 @@ from generic.protocol import BinaryMessageProtocol
 from dictionary.handler import DictionaryRequestHandler
 from dictionary.server import LocationHandler
 from dictionary.admin import DictionaryAdminServer
+from dictionary.replicanotifier import ReplicaNotifier
 
 class DictionaryServer(FixedLengthMessageServer):
     def __init__(self, options, args):
@@ -20,6 +22,8 @@ class DictionaryServer(FixedLengthMessageServer):
         self.factory.protocol = BinaryMessageProtocol
         self.factory.protocolVersion = 0b1
         self.factory.delegate = LocationHandler()
+        self.factory.replicaList = []
+        self.factory.replicaNotifier = ReplicaNotifier()
 
 if __name__ == '__main__':
     parser = OptionParser()

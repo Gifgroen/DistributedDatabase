@@ -23,6 +23,10 @@ class BlockingProtoBufConnection(object):
     def stop(self):
         self.socket.close()
         
+    def resetSocket(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket = ssl.wrap_socket(s, ca_certs="sslcert/cert.pem", cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_SSLv23)
+        
     def _readNBytes(self, numBytes):
         #print 'read %d bytes' % numBytes
         msgData = ''
