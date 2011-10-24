@@ -4,6 +4,8 @@ from generic.crypto import validateHashedStorageHeader
 from twisted.python import log
 from twisted.internet import reactor
 
+import sys, traceback
+
 
 # TODO timeout for XOR writes, what if it takes to long before a response
 # is received from xor partner.
@@ -86,7 +88,7 @@ class StorageRequestHandler():
     """
     def _sendExceptionAndDie(self, errorString):
         self._sendACK(errorString)
-        log.msg("%s (is send to client)" % errorString)
+        log.msg("ERROR: %s (is send to client)" % errorString)
         self.protocol.transport.loseConnection()
         
     """
@@ -112,7 +114,11 @@ class StorageRequestHandler():
         log.msg(self.signedHeader)
         self.currentWriteOffset = 0
         self._validateHash()
-        return self._handleStorgeHeader()
+        try:
+            return self._handleStorgeHeader()
+        except Exception, e:
+            self._sendExceptionAndDie(repr(e))
+            
     
     """
     Callback from _handleWrite that is called if the partner has 

@@ -50,7 +50,7 @@ class StorageDatabase(object):
     and length, and the data.
     """
     def pushRead(self, offset, length, callback, *args):
-        assert offset + length < self.size
+        assert offset + length < self.size, "pushRead exceeds upper bound of filesize"
         log.msg("pushRead(%d, %d)" % (offset, length))
         self.work_queue.put((self._handleRead,
             offset, length, callback, args))
@@ -61,7 +61,7 @@ class StorageDatabase(object):
     the offset to disk.
     """
     def pushWrite(self, offset, data):
-        assert offset + len(data) < self.size
+        assert offset + len(data) < self.size, "pushWrite exceeds upper bound of filesize"
         log.msg("pushWrite(%d, %s)" % (offset, truncateString(repr(data))))
         self.work_queue.put((self._handleWrite, offset, data))
 
@@ -73,7 +73,7 @@ class StorageDatabase(object):
     P' = I XOR P.
     """
     def pushXORWrite(self, offset, data):
-        assert offset + len(data) < self.size
+        assert offset + len(data) < self.size, "pushXORWrite exceeds upper bound of filesize"
         log.msg("pushXORWrite(%d, %s)" % (offset, truncateString(repr(data))))
         self.work_queue.put((self._handleXORWrite, offset, data))
         
@@ -86,7 +86,7 @@ class StorageDatabase(object):
     XOR-update to the parity server. I = A' XOR A
     """
     def pushXORRead(self, offset, data, callback, *args):
-        assert offset + len(data) < self.size
+        assert offset + len(data) < self.size, "pushXORRead exceeds upper bound of filesize"
         log.msg("pushXORRead(%d, %s)" % (offset, truncateString(repr(data))))
         self.work_queue.put((self._handleXORRead,
             offset, data, callback, args))
