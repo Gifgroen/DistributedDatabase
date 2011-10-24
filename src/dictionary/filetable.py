@@ -12,6 +12,10 @@ class DictionaryTable(object):
     def __init__(self):
         self.locationDict = {}
 
+
+    def keys(self):
+        return self.locationDict.keys()
+
     """
     Add an entry in the DictionaryTable
 	@return: the reference location under which the data is stored
