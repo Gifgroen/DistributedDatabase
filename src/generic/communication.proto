@@ -76,7 +76,7 @@ message StorageAdminRequestContainer {
     optional bytes messageData = 2;
 }
 
-message StorageAdminServerLocation {
+message StorageAdminServerLocation { // also used by freelist
     required string host = 1;
     required uint64 port = 2;
 }
@@ -124,4 +124,39 @@ message DictionaryReplicaLocation {
     required string host = 2;
     required uint64 port = 3;
 }
+
+// free list messages
+message SpaceLocation {
+    required string host = 1;
+    required uint64 port = 2;
+    required uint64 offset = 3;
+    required uint64 length = 4;
+}
+
+message FreelistRequest {
+    enum Operation {
+        ALLOCATE = 1;
+        RELEASE = 2;
+        MOVE_HOST = 3;
+    }
+    required Operation operation = 1;
+    // for ALLOCATE only:
+    optional uint64 numberOfBytes = 2;
+    // for RELEASE only:
+    repeated SpaceLocation releasedSpace = 3;
+    // for MOVE_HOST online:
+    optional StorageAdminServerLocation moveFrom = 4;
+    optional StorageAdminServerLocation moveTo = 5;
+}
+
+message FreeListResponse {
+    enum Status {
+        OK = 1;
+        ERROR = 2;
+    }
+    required Status status = 1;
+    optional string errorMsg = 2; // is set if status == ERROR
+    repeated SpaceLocation freeSpace = 3;
+}
+
 
