@@ -60,6 +60,8 @@ def connect(service, host, port, shortkey=None):
         connectDictionary(host, port, shortkey)
     elif service is 'storage':
         connectStorage(host, port, shortkey)
+    else:
+        raise Exception("cannot start that service")
 
 def connectStorage(server, port, shortkey=None):
     if shortkey is None:

@@ -1,4 +1,6 @@
-# The server manager that initiates actions by sending messages to adminDictClients
+"""
+The server manager that initiates actions by sending messages to adminDictClients
+"""
 from dictionaryclient import DictionaryClient
 
 from generic.communication_pb2 import AdminResponse, RequestContainer, DictionaryLocation, DictionaryKeys
@@ -8,14 +10,12 @@ from threading import Thread
 from time import time, sleep
 import socket
 
-# init new slave and notify dictServer
+HEARTBEAT_SECONDS = 10 # low for testing
 
-HEARTBEAT_SECONDS = 3 # low for testing
+REPLICA_GROUP_SIZE = 2
 
-REPLICA_GROUP_SIZE = 3
-
-STAND_BY_LIST = [] # Connections
-REPLICA_LIST = [] # Replicagroups
+STAND_BY_LIST = []   # Connections
+REPLICA_LIST = []    # Replicagroups
 
 TEST_MODE = True
 
@@ -48,13 +48,17 @@ class DictionaryAdminClient(object):
         print response.errorMsg
         return False
     
+    def resetState(self):
+        self._send(None, RequestContainer.RESET_STATE)
+        return self._checkResponse()
+    
     """
     Give the DictServer a new slave located at host:port
     """
     def notifyMasterOfNewSlave(self, connection):
         serverMsg = DictionaryLocation()
         serverMsg.host = connection.host
-        serverMsg.port = connection.adminPort
+        serverMsg.port = connection.clientPort
 
         self._send(serverMsg, RequestContainer.NEW_SLAVE)
         return self._checkResponse()
@@ -65,7 +69,7 @@ class DictionaryAdminClient(object):
     def notifySlaveOfNewMaster(self, connection):
         serverMsg = DictionaryLocation()
         serverMsg.host = connection.host
-        serverMsg.port = connection.adminPort
+        serverMsg.port = connection.clientPort
 
         self._send(serverMsg, RequestContainer.NEW_MASTER)
         return self._checkResponse()
@@ -73,9 +77,13 @@ class DictionaryAdminClient(object):
     """
     Tell the dictServer that he is a slave
     """
-    def setSlave(self):
+    def setSlave(self, masterConnection):
+        serverMsg = DictionaryLocation()
+        serverMsg.host = masterConnection.host
+        serverMsg.port = masterConnection.clientPort
+
         # tell dictserver that he is a slave
-        self._send(None, RequestContainer.IS_SLAVE)
+        self._send(serverMsg, RequestContainer.IS_SLAVE)
         return self._checkResponse()
     
     """
@@ -107,7 +115,8 @@ class Connection(object):
         except socket.error:
             return False
         return True
-    
+        
+
     """
     Set new replica and notify master of this replica
     """
@@ -123,8 +132,9 @@ class Connection(object):
         self.adminClient.notifySlaveOfNewMaster(connection)
 
     # tell server that he is a slave
-    def setSlave(self):
-        self.adminClient.setSlave()
+    def setSlave(self, masterConnection):
+        self.adminClient.setSlave(masterConnection)
+        #self.adminClient.notifySlaveOfNewMaster(masterConnection)
 
     # tell server that he is a master
     def setMaster(self):
@@ -162,18 +172,23 @@ class ReplicaGroup(object):
         master.setMaster()
 
         for slave in self.group['slave']:
-            slave.setSlave()
-            slave.addNewMasterServer(master)
-            master.addNewSlaveServer(slave)
+            slave.setSlave(master)              # Inform the the slave that it is a slave of masterConnection
+            master.addNewSlaveServer(slave)     # inform the master of a new slave
 
     
     # We need to recover the master (aka set a new one)!! 
     def recoverMaster(self):
-        print "ERROR: Master is down! Potential loss of data. FIX NOW!!"
+        if self.group['slave'] == []:
+            raise Exception("I'm out of slaves cannot recover")
+        
+        self.group['master'] = self.group['slave'].pop(0)
+        self.initiate()
+        print "Successfully recovered. New group: ", self.group
     
     # function that WARNS that a slave is down
-    def fallenSlave(self):
-        print "WARNING: slave is down!"
+    def fallenSlave(self, slaveCon):
+        self.group['slave'].remove(slaveCon)
+        print "WARNING: slave is down! Removed ", slaveCon, " from group"
         
     def check(self):
         # go over all servers and check if we need to initiate change
@@ -181,11 +196,12 @@ class ReplicaGroup(object):
             self.recoverMaster()
         for slave in self.group['slave']:
             if slave is not None and not slave.sendHeartbeat():
-                self.fallenSlave()
+                self.fallenSlave(slave)
     
     def stop(self):
-        self.client.stop()
-        self.adminClient.stop()
+        self.group['master'].stop()
+        for slave in self.group['slave']:
+            slave.stop()
     
     def getGroup(self):
         return self.group
@@ -193,10 +209,6 @@ class ReplicaGroup(object):
     def __repr__(self):
         return str(self.getGroup())
 
-
-def startup():
-    t = Thread(target=heartBeatJob, name='HeartBeatJob')
-    t.start()
     
 def connectServer(host, clientPort, adminPort):
     newServer = Connection(host, clientPort, adminPort)
@@ -238,15 +250,23 @@ def testSetup():
     
 def restart():
     stop()
-    connectServer('localhost', 8080, 8081)
-    connectServer('localhost', 8089, 8090)
-    connectServer('localhost', 8084, 8085)
-    #connectServer('localhost', 8086, 8087)
+    connectServer('localhost', 4248, 4249)
+    connectServer('localhost', 4250, 4251)
     
     print 'STAND_BY_LIST', STAND_BY_LIST
     startNewReplicaGroup()
     print 'REPLICA_LIST', REPLICA_LIST    
+
+def startup():
+    t = Thread(target=heartBeatJob, name='HeartBeatJob')
+    t.start()
     
+def start():
+    try:
+        testSetup()
+    except:
+        pass
+    startup()
     
 def stop():
     for server in STAND_BY_LIST:

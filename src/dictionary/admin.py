@@ -11,9 +11,19 @@ class DictionaryAdminRequestHandler(object):
         self.protocol = protocol
         self.dictServer = self.protocol.factory.dictionaryServer
 
+    def becomeMaster(self, masterFlag):
+        if self.dictServer.factory.isMaster == masterFlag:
+            self._reply("This doesn't make any sense to me. I'm alread a master")
+        else:
+            self.dictServer.factory.isMaster = masterFlag
+            self._reply()
+        
+        
+
     def setSlave(self, host, port):
         replica = {"host": host, "port": port}
         if replica not in self.dictServer.factory.replicaList:
+            log.msg("added replica to mys list")
             self.dictServer.factory.replicaList.append(replica)
             self._reply()
         else: 
@@ -22,6 +32,12 @@ class DictionaryAdminRequestHandler(object):
     def setMaster(self, host, port):
         self.dictServer.factory.master = {"host": host, "port": port}
         self._reply()
+
+    def resetGroupState(self):
+        if not self.dictServer.factory.isMaster:
+            self.dictServer.factory.master = {}     # reset my master
+        self.dictServer.factory.replicaList = []    # empty my replicas
+        self.dictServer.factory.isMaster = False
 
     def _reply(self, error=None):
         reply = AdminResponse()
@@ -48,10 +64,18 @@ class DictionaryAdminRequestHandler(object):
             self.setMaster(msg.host, msg.port)
             log.msg("New master set: ", msg.host, " at ", msg.port)
         elif incoming.notification == RequestContainer.IS_MASTER:
-            print("I AM THE NEW MASTER :D")
-            self._reply()
+            self.becomeMaster(True)
+            log.msg("I became new master!")
         elif incoming.notification == RequestContainer.IS_SLAVE:
-            print("I am a humble slave")
+            msg = DictionaryLocation()
+            msg.ParseFromString(incoming.messageData)
+            # set my master to the specified master
+            self.setMaster(msg.host, msg.port)
+            log.msg("I am a humble slave to :", msg.host, ":", msg.port)
+            self._reply()
+        elif incoming.notification == RequestContainer.RESET_STATE:
+            self.resetGroupState()
+            log.msg("Resetting state...")
             self._reply()
         else:
             self._reply("Unknown dictionary admin operation")

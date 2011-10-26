@@ -34,7 +34,8 @@ class DictionaryClient(object):
     def doHeartbeat(self):
         req = DictionaryHeader()
         req.operation = DictionaryHeader.HEARTBEAT
-        
+        req.issuer = "client"
+
         self.sendRequest(req)
         response = self.readMsg()
         if response.status == DictionaryResponseHeader.OK:
@@ -48,6 +49,7 @@ class DictionaryClient(object):
     def doADD(self, sizeOfData):
         req = DictionaryHeader()
         req.size = sizeOfData
+        req.issuer = "client"
         #req.key = "foobar"  # REMOVE AFTER TESTING, RESULTS IN BAD BEHAVIOUR IN PRODUCTION ENV
         req.operation = DictionaryHeader.ADD
         
@@ -64,6 +66,7 @@ class DictionaryClient(object):
     def doGET(self, key):
         req = DictionaryHeader()
         req.operation = DictionaryHeader.GET
+        req.issuer = "client"
         req.key = key
 
         self.sendRequest(req)
@@ -79,6 +82,7 @@ class DictionaryClient(object):
     def doDELETE(self, key):
         req = DictionaryHeader()
         req.operation = DictionaryHeader.DELETE
+        req.issuer = "client"
         req.key = key
 
         self.sendRequest(req)

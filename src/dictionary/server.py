@@ -37,7 +37,7 @@ class LocationHandler:
     def handleHeartbeat(self):
         rhead = DictionaryResponseHeader()
         rhead.status = DictionaryResponseHeader.OK
-        return rhead, None
+        return rhead
 
     """
     Handle GET request
@@ -56,7 +56,24 @@ class LocationHandler:
             for loc in locs:
                 rhead.locations.extend([loc.toReadMessage()])
 
-        return rhead, None
+        return rhead
+
+    def add(self):
+        # get space from freelist
+        locs = self.fl.allocSpace(self.requestHeader.size)
+        
+        generatedKey = False
+        if self.requestHeader.key != "":
+            # use the existing key
+            key = self.requestHeader.key
+        else:
+            # generate a random key
+            key = str(uuid.uuid4())
+
+        for loc in locs:
+            self.filetable.add(key, **loc)
+            
+        return key
 
     """
     Handle ADD request
@@ -64,30 +81,29 @@ class LocationHandler:
         action   -> ADD entry in filetable
         response -> Location message (WRITE) + redirect (if necessary)
     """
-    def handleADD(self):       
-        # get space from freelist
-        locs = self.fl.allocSpace(self.requestHeader.size)
-        
-        # generate a random key
-        key = str(uuid.uuid4())
-        print key
-        for loc in locs:
-            self.filetable.add(key, **loc)
-
-        redirect = None
-        rhead = None
-        if self.requestHeader.key != "":
-            # forward message
-            redirect = self.requestHeader
-        
-        # Return status message
+    def handleADD(self):
         rhead = DictionaryResponseHeader()
-        rhead.status = DictionaryResponseHeader.OK
-        rhead.key = key
         rhead.locations.extend([])
 
-        return rhead, redirect
+        key = self.add()
+        
+        rhead.status = DictionaryResponseHeader.OK
+        rhead.key = key
+        return rhead
 
+
+    def delete(self):
+        # get the LocationEntry to free in freelist
+        locs = self.filetable.get(self.requestHeader.key)
+
+        # Release in freelist
+        for loc in locs:
+            self.fl.releaseSpace(**loc.toDict())
+        
+        # Delete from filetable
+        status = self.filetable.delete(self.requestHeader.key)
+        
+        return status
 
     """
     Handle DELETE request
@@ -96,19 +112,15 @@ class LocationHandler:
         -> response: OK message + redirect (not necessary here)
     """
     def handleDELETE(self):
-        # get the LocationEntry to free in freelist
-        locs = self.filetable.get(self.requestHeader.key)
-
-        # Release in freelist
-        for loc in locs:
-            self.fl.releaseSpace(**loc.toDict())
-        
         rhead = DictionaryResponseHeader()
+        rhead.locations.extend([])
         rhead.status = DictionaryResponseHeader.OK
-        
-        # Delete from filetable
-        status = self.filetable.delete(self.requestHeader.key)
+    
+        # delete the current key
+        status = self.delete()
         if status == False:
             rhead.status = DictionaryResponseHeader.NOT_EXISTING_KEY
+        
+        return rhead
 
-        return rhead, None
+
