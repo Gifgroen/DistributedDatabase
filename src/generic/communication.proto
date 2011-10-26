@@ -58,6 +58,7 @@ message DictionaryHeader {
         GET = 1;
         ADD = 2;
         DELETE = 3;
+        HEARTBEAT = 4;
     }
     required Operation operation = 1;
     optional string key = 2;
@@ -97,7 +98,7 @@ message StorageAdminResponse {
 
 // Internal dictionary service messages for administration
 
-// GENERALIZE TO STORAGE ADMIN?
+// GENERALIZE TO ADMIN?
 message AdminResponse {
     enum Status {
         OK = 1;
@@ -113,14 +114,17 @@ message DictionaryKeys {
 }
 
 message RequestContainer {
-    enum Operation {
+    enum Notification {
         NEW_SLAVE = 1;
+        NEW_MASTER = 2;
+        IS_MASTER = 3;
+        IS_SLAVE = 4;
     }
-    required Operation operation = 1;
+    required Notification notification = 1;
     optional bytes messageData = 2;
 }
 
-message DictionaryReplicaLocation {
+message DictionaryLocation {
     required string host = 2;
     required uint64 port = 3;
 }

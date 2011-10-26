@@ -22,12 +22,22 @@ class LocationHandler:
         self.requestHeader = header
 
         # These actions return Status and redirect in case of ADD, other two return None as redirect
-        if self.requestHeader.operation == DictionaryHeader.GET:
+        if self.requestHeader.operation == DictionaryHeader.HEARTBEAT:
+            return self.handleHeartbeat()
+        elif self.requestHeader.operation == DictionaryHeader.GET:
             return self.handleGET()
         elif self.requestHeader.operation == DictionaryHeader.ADD:
             return self.handleADD()
         elif self.requestHeader.operation == DictionaryHeader.DELETE:
             return self.handleDELETE()
+
+    """
+    It is possible that we get heartbeat from the manager, we respond with a OK
+    """
+    def handleHeartbeat(self):
+        rhead = DictionaryResponseHeader()
+        rhead.status = DictionaryResponseHeader.OK
+        return rhead, None
 
     """
     Handle GET request

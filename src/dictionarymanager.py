@@ -1,15 +1,23 @@
 # The server manager that initiates actions by sending messages to adminDictClients
-from generic.communication_pb2 import AdminResponse, RequestContainer, DictionaryReplicaLocation, DictionaryKeys
+from dictionaryclient import DictionaryClient
 
+from generic.communication_pb2 import AdminResponse, RequestContainer, DictionaryLocation, DictionaryKeys
 from generic.protobufconnection import BlockingProtoBufConnection
-from twisted.internet import reactor
+
+from threading import Thread
+from time import time, sleep
+import socket
 
 # init new slave and notify dictServer
 
-HEARTBEAT_SECONDS = 10 # low for testing
+HEARTBEAT_SECONDS = 3 # low for testing
+
+REPLICA_GROUP_SIZE = 3
 
 STAND_BY_LIST = [] # Connections
-ACTIVE_LIST = [] # Raidgroups
+REPLICA_LIST = [] # Replicagroups
+
+TEST_MODE = True
 
 class DictionaryAdminClient(object):
     """
@@ -22,9 +30,9 @@ class DictionaryAdminClient(object):
     """
     A message to send to a dictManager
     """
-    def _send(self, msg, opp):
+    def _send(self, msg, notification):
         internal = RequestContainer()
-        internal.operation = opp
+        internal.notification = notification
         if msg is not None:
             internal.messageData = msg.SerializeToString()
         self.connection.sendMsg(internal)
@@ -41,14 +49,41 @@ class DictionaryAdminClient(object):
         return False
     
     """
-    give the connected DictServer a new slave located at host:port
+    Give the DictServer a new slave located at host:port
     """
-    def setReplicaServer(self, host, port):
-        serverMsg = DictionaryReplicaLocation()
-        serverMsg.host = host
-        serverMsg.port = port
+    def notifyMasterOfNewSlave(self, connection):
+        serverMsg = DictionaryLocation()
+        serverMsg.host = connection.host
+        serverMsg.port = connection.adminPort
 
         self._send(serverMsg, RequestContainer.NEW_SLAVE)
+        return self._checkResponse()
+        
+    """
+    Give the DictServer a new Master located at host:port
+    """
+    def notifySlaveOfNewMaster(self, connection):
+        serverMsg = DictionaryLocation()
+        serverMsg.host = connection.host
+        serverMsg.port = connection.adminPort
+
+        self._send(serverMsg, RequestContainer.NEW_MASTER)
+        return self._checkResponse()
+    
+    """
+    Tell the dictServer that he is a slave
+    """
+    def setSlave(self):
+        # tell dictserver that he is a slave
+        self._send(None, RequestContainer.IS_SLAVE)
+        return self._checkResponse()
+    
+    """
+    Tell the dictServer that he is a Master
+    """    
+    def setMaster(self):
+        # tell dictserver that he is a master
+        self._send(None, RequestContainer.IS_MASTER)
         return self._checkResponse()
 
     """
@@ -58,10 +93,165 @@ class DictionaryAdminClient(object):
         print "Con closed"
         self.connection.stop()
 
-if __name__ == "__main__":
-    # the dictionary admin client to which we want to connect
-    cli = DictionaryAdminClient("localhost", 8088)
-    print cli.setReplicaServer("localhost", 8083)
-    print cli.setReplicaServer("localhost", 8085)
-    cli.stop()
+class Connection(object):
+    def __init__(self, host, clientPort, adminPort):
+        self.host = host
+        self.clientPort = clientPort
+        self.adminPort = adminPort
+        self.client = DictionaryClient(host, clientPort)
+        self.adminClient = DictionaryAdminClient(host, adminPort)
+        
+    def sendHeartbeat(self):
+        try:
+            self.client.doHeartbeat()
+        except socket.error:
+            return False
+        return True
     
+    """
+    Set new replica and notify master of this replica
+    """
+    def addNewSlaveServer(self, connection):
+        # I assume you know what you are doing and won't set a new slave that already exists
+        self.adminClient.notifyMasterOfNewSlave(connection)
+        
+    """
+    Set new master and notify master of this replica
+    """
+    def addNewMasterServer(self, connection):
+        # I assume you know what you are doing and won't set a new master that already exists
+        self.adminClient.notifySlaveOfNewMaster(connection)
+
+    # tell server that he is a slave
+    def setSlave(self):
+        self.adminClient.setSlave()
+
+    # tell server that he is a master
+    def setMaster(self):
+        self.adminClient.setMaster()
+        
+    def stop(self):
+        self.client.stop()
+        self.adminClient.stop()
+        
+    def __repr__(self):
+        return '%s:[%d|%d]' % (self.host, self.clientPort, self.adminPort)
+
+class ReplicaGroup(object):
+    def __init__(self, servers):
+        if servers is []:
+            raise Exception("Cannot create empty replica group")
+        self.group = {"master": None, "slave":[]}
+        for server in servers:
+            if self.group['master'] == None:
+                self.group['master'] = server
+            else:
+                self.group['slave'].append(server)
+        self.initiate()
+        
+        
+    """
+    1. notify the master that he is a master
+    2. for each slave:
+        a. notify slave that he is a slave
+        b. tell the slave who his master is
+    3. notify the master of his new slave
+    """
+    def initiate(self):
+        master = self.group['master']
+        master.setMaster()
+
+        for slave in self.group['slave']:
+            slave.setSlave()
+            slave.addNewMasterServer(master)
+            master.addNewSlaveServer(slave)
+
+    
+    # We need to recover the master (aka set a new one)!! 
+    def recoverMaster(self):
+        print "ERROR: Master is down! Potential loss of data. FIX NOW!!"
+    
+    # function that WARNS that a slave is down
+    def fallenSlave(self):
+        print "WARNING: slave is down!"
+        
+    def check(self):
+        # go over all servers and check if we need to initiate change
+        if self.group['master'] is not None and not self.group['master'].sendHeartbeat():
+            self.recoverMaster()
+        for slave in self.group['slave']:
+            if slave is not None and not slave.sendHeartbeat():
+                self.fallenSlave()
+    
+    def stop(self):
+        self.client.stop()
+        self.adminClient.stop()
+    
+    def getGroup(self):
+        return self.group
+    
+    def __repr__(self):
+        return str(self.getGroup())
+
+
+def startup():
+    t = Thread(target=heartBeatJob, name='HeartBeatJob')
+    t.start()
+    
+def connectServer(host, clientPort, adminPort):
+    newServer = Connection(host, clientPort, adminPort)
+    STAND_BY_LIST.append(newServer)
+    
+def heartBeatJob():
+    while True:
+        start = time()
+        
+        #do something usefull
+        for group in REPLICA_LIST:
+            group.check()
+        # check again in heartbeat time seconds (minus the time the job took)
+        sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
+        #print 'sleep %d seconds' % sleep_secs
+        sleep(sleep_secs)
+
+def _createReplicaGroup(servers = None):
+    if not servers:
+        servers = []
+    for standby in STAND_BY_LIST:
+        if standby.host not in [server.host for server in servers] or TEST_MODE:
+            #print 'add', standby, servers
+            servers.append(standby)
+            if len(servers) == REPLICA_GROUP_SIZE:
+                return servers
+    raise Exception("Not enough standby servers available...")
+
+def startNewReplicaGroup():
+    servers = _createReplicaGroup()
+    for server in servers:
+        STAND_BY_LIST.remove(server)
+    newGroup = ReplicaGroup(servers)
+    REPLICA_LIST.append(newGroup)
+    
+def testSetup():
+    restart()
+    startNewReplicaGroup()
+    
+def restart():
+    stop()
+    connectServer('localhost', 8080, 8081)
+    connectServer('localhost', 8089, 8090)
+    connectServer('localhost', 8084, 8085)
+    #connectServer('localhost', 8086, 8087)
+    
+    print 'STAND_BY_LIST', STAND_BY_LIST
+    startNewReplicaGroup()
+    print 'REPLICA_LIST', REPLICA_LIST    
+    
+    
+def stop():
+    for server in STAND_BY_LIST:
+        server.stop()
+    del STAND_BY_LIST[:]
+    for group in REPLICA_LIST:
+        group.stop()
+    del REPLICA_LIST[:]

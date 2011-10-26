@@ -29,16 +29,14 @@ class DictionaryRequestHandler():
         
 
     def parsedMessage(self, msgData):
-        print "PARSEDD"
         requestMessage = DictionaryHeader()
         requestMessage.ParseFromString(msgData)
         
         log.msg("parsed dict message!")
-
+        log.msg(requestMessage)
+        
         status, redirect = self.protocol.factory.delegate.handleRequest(requestMessage)
-    
-        print status
-    
+
         # Respond with status
         self.protocol.writeMsg(status)
         if redirect != None and self.protocol.factory.replicaList != []:

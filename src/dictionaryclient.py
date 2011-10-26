@@ -16,6 +16,9 @@ class DictionaryClient(object):
         self.connection.start(host, port)
         self.key = ""
 
+    def sendHeartbeat(self, heartbeat):
+        self.connection.sendMsg(heartbeat)
+
     def sendMsg(self, msg):
         self.connection.sendMsg(msg)
 
@@ -27,7 +30,21 @@ class DictionaryClient(object):
         
     def getKey(self):
         return self.key
+    
+    def doHeartbeat(self):
+        req = DictionaryHeader()
+        req.operation = DictionaryHeader.HEARTBEAT
         
+        self.sendRequest(req)
+        response = self.readMsg()
+        if response.status == DictionaryResponseHeader.OK:
+            self.key = response.key
+            return True, response.key
+        
+        print responseHeader.status
+        self.stop()
+        return False, None
+    
     def doADD(self, sizeOfData):
         req = DictionaryHeader()
         req.size = sizeOfData
