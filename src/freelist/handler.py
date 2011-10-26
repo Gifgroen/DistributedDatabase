@@ -22,7 +22,7 @@ class FreelistRequestHandler():
             log.msg("Send error to client: %s" % error)
         else:
             self.response.status = FreeListResponse.OK
-        self.protocol.sendMsg(self.response)
+        self.protocol.writeMsg(self.response)
             
         
     def _handleRelease(self):
@@ -37,7 +37,7 @@ class FreelistRequestHandler():
             location.port = port
             location.offset = offset
             location.length = length
-            self.response.freeSpace.append(location)
+            self.response.freeSpace.extend([location])
             
     def _handleAllocate(self):
         result = self.freelist.allocSpace(self.request.numberOfBytes)
@@ -56,13 +56,13 @@ class FreelistRequestHandler():
     Message received by parser
     """
     def parsedMessage(self, msgData):
-        self.request = SpaceRequest()
+        self.request = FreelistRequest()
         self.request.ParseFromString(msgData)
-        if self.request.operation == FreelistRequest.RELEASE and self.request.hasField("releasedSpace"):
+        if self.request.operation == FreelistRequest.RELEASE and len(self.request.releasedSpace) > 0:
             self._handleRelease()
-        elif self.request.operation == FreelistRequest.ALLOCATE and self.request.hasField("numBytes"):
+        elif self.request.operation == FreelistRequest.ALLOCATE and self.request.HasField("numberOfBytes"):
             self._handleAllocate()
-        elif self.request.operation == FreelistRequest.MOVE_HOST and self.request.hasField("moveFrom") and self.request.hasField("moveTo"):
+        elif self.request.operation == FreelistRequest.MOVE_HOST and self.request.HasField("moveFrom") and self.request.HasField("moveTo"):
             self._handleMoveHost()
         else:
             self._sendReply("Invalid freelist message type, do nothing...")

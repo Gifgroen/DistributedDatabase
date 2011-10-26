@@ -12,13 +12,16 @@ class FreeListEntry(object):
         self.length = length
         
     def consume(self, numberOfBytes):
-        assert numberOfBytes <= self.length
+        assert numberOfBytes <= self.length, "Cannot consume more than the total size"
         # create consumed piece
-        consumed = (self.host, self.port, self.offset, numberOfBytes)
+        consumed = FreeListEntry(self.host, self.port, self.offset, numberOfBytes)
         # decrease existing piece
         self.offset += numberOfBytes
         self.length -= numberOfBytes
         return consumed
+        
+    def toTuple(self):
+        return (self.host, self.port, self.offset, self.length)
         
     def __repr__(self):
         return "(%s:%d %d-%d)" % (self.host, self.port, self.offset, self.length)
@@ -61,7 +64,7 @@ class FreeList(object):
         lastEntry = self.memtable[lastIdx]
         if restSize == lastEntry.length: #entire piece must be consumed
             lastConsumption = lastEntry
-            self.memtable.remove(lastIdx)
+            del self.memtable[lastIdx]
         else:
             lastConsumption = self.memtable[lastIdx].consume(restSize) # consume rest from last part
         return lastConsumption
@@ -88,10 +91,13 @@ class FreeList(object):
     Returns None if the request could not be fulfilled
     """
     def allocSpace(self, numberOfBytes):
-        assert numberOfBytes > 0
+        assert numberOfBytes > 0, "allocate request should always be larger than 1 byte"
         if len(self.memtable) == 0:
             return None
-        return self._roundRobinConsumptionStrategy(numberOfBytes)
+        result = self._roundRobinConsumptionStrategy(numberOfBytes)
+        if result is None:
+            return None
+        return [entry.toTuple() for entry in result]
         
     def releaseSpace(self, host, port, offset, length):
         self.memtable.append(FreeListEntry(host, port, offset, length))
@@ -140,4 +146,8 @@ if __name__ == '__main__':
 
     testAlloc(3)
     testAlloc(12)
+    testAlloc(8)
+    testAlloc(4)
+    
+    
     
