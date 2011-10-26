@@ -1,4 +1,8 @@
+#!/usr/bin/env python
 from random import choice
+
+from twisted.python import log
+
 
 class FreeListEntry(object):
     def __init__(self, host, port, offset, length):
@@ -15,6 +19,9 @@ class FreeListEntry(object):
         self.offset += numberOfBytes
         self.length -= numberOfBytes
         return consumed
+        
+    def __repr__(self):
+        return "(%s:%d %d-%d)" % (self.host, self.port, self.offset, self.length)
 
 class FreeList(object):
     def __init__(self):
@@ -33,9 +40,10 @@ class FreeList(object):
     def _getEnoughMemoryPieces(self, numberOfBytes):
         consumedSize = 0
         for idx in range(len(self.memtable)):
-            consumedSize += self.memtable[self._roundRobinIndex(idx)]
+            consumedSize += self.memtable[self._roundRobinIndex(idx)].length
             if consumedSize >= numberOfBytes:
-                return idx
+                log.msg("Requires %d pieces" % (idx + 1))
+                return idx + 1
         return None
         
         
@@ -51,7 +59,7 @@ class FreeList(object):
     def _consumeLastPiece(self, idx, restSize):
         lastIdx = self._roundRobinIndex(idx)
         lastEntry = self.memtable[lastIdx]
-        if rest == lastEntry.length: #entire piece must be consumed
+        if restSize == lastEntry.length: #entire piece must be consumed
             lastConsumption = lastEntry
             self.memtable.remove(lastIdx)
         else:
@@ -61,7 +69,7 @@ class FreeList(object):
     def _roundRobinConsumptionStrategy(self, numberOfBytes):
         if self.index > len(self.memtable):
             self.index = 0 # reset round robin index
-        pieces = self._getEnoughMemorPieces(numberOfBytes)
+        pieces = self._getEnoughMemoryPieces(numberOfBytes)
         if pieces is None: # not enough memory available
             return None
             
@@ -80,10 +88,10 @@ class FreeList(object):
     Returns None if the request could not be fulfilled
     """
     def allocSpace(self, numberOfBytes):
-        assert sizeOfData > 0
+        assert numberOfBytes > 0
         if len(self.memtable) == 0:
             return None
-        return _roundRobinConsumptionStrategy(numberOfBytes)
+        return self._roundRobinConsumptionStrategy(numberOfBytes)
         
     def releaseSpace(self, host, port, offset, length):
         self.memtable.append(FreeListEntry(host, port, offset, length))
@@ -101,4 +109,26 @@ class FreeList(object):
             if entry.host == fromHost and entry.port == fromPort:
                 entry.host = toHost
                 entry.port = toPort
+                
+    def __repr__(self):
+        return "Freelist: %s" % (self.memtable)
         
+        
+"""
+For simple testing only...
+"""
+if __name__ == '__main__':
+    import sys
+    log.startLogging(sys.stdout)
+    log.msg('Performing simple tests...')
+    
+    f = FreeList()
+    
+    hostA = ("localhost", 8080, 0, 10) # 100mb
+    hostB = ("localhost", 8080, 0, 10) # 100mb
+    f.releaseSpace(*hostA)
+    f.releaseSpace(*hostB)
+    log.msg(repr(f))
+    log.msg(f.allocSpace(12))
+    log.msg(repr(f))
+    
