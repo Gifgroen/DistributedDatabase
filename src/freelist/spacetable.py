@@ -111,7 +111,7 @@ class FreeList(object):
                 entry.port = toPort
                 
     def __repr__(self):
-        return "Freelist: %s" % (self.memtable)
+        return "Freelist:\t%s" % (self.memtable)
         
         
 """
@@ -124,11 +124,20 @@ if __name__ == '__main__':
     
     f = FreeList()
     
-    hostA = ("localhost", 8080, 0, 10) # 100mb
-    hostB = ("localhost", 8080, 0, 10) # 100mb
+    hostA = ("A", 8080, 0, 10) # 100mb
+    hostB = ("B", 8080, 0, 10) # 100mb
+    
     f.releaseSpace(*hostA)
     f.releaseSpace(*hostB)
-    log.msg(repr(f))
-    log.msg(f.allocSpace(12))
-    log.msg(repr(f))
+    
+    def testAlloc(size):
+        log.msg('-' * 50)
+        log.msg(repr(f))
+        log.msg("Allocate:\t%d bytes" % size)
+        log.msg("Result:\t%s" % f.allocSpace(size))
+        log.msg(repr(f))
+        log.msg('-' * 50)
+
+    testAlloc(3)
+    testAlloc(12)
     
