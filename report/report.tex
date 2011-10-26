@@ -132,6 +132,8 @@ The timestamped hashing principle ensures that clients cannot read or write data
 Since we use the Python Twisted asynchronous event framework, the implementation of the protocol parser is also created in this project. The problem of non-blocking IO is that you don't know how much data is received per event, and you don't know in advance if this is enough to parse the entire message. It was for this reason necessary to prepend the length of the message in front of the actual message data as shown in \autoref{fig:message-structure}. %TODO add reference: http://code.google.com/intl/nl-NL/apis/protocolbuffers/docs/techniques.html#streaming
 In this way, we are able to stream multiple messages over the same connection, this is very useful for the replication connection that is explained in the following section.
 
+% TODO: explain why original StorageHeader is returned in response message: client might be assynchrounous!
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth,trim=0 24cm 0 3cm,clip=true]{diagrams/message-structure.pdf}
@@ -176,7 +178,16 @@ The storage instances itself does not guarantee fault-tolerant automatically. If
 For these management tasks the \verb|StorageManager| component is created. This component is currently not implemented in a redundant way, but this is not a difficult tasks since only two lists (\verb|STAND_BY_LIST| and \verb|ACTIVE_LIST|) must be kept synchronized. Also, it is not a big problem if the storage instance is down for a few seconds, this only means that if in the same time a storage instance also crashes it will not be detected, and thus not restored.
 
 \subsection{Dictionary Service}
+% TODO: by karsten
+
 \subsection{Freelist Service}
+% TODO describe:
+% - Implementation details:
+%   - Round robin scheduler (bad for fragmentation if loads of data will be removed)
+%   - Release/Alloc, no other knowledge
+%   - Move host principle
+
+
 \subsection{Front-end / proxy}
 \subsection{Client}
 Without the optional front-end layer this layer must know the mapping from dictionary keys to dictionary server instance.
@@ -193,6 +204,11 @@ Without the optional front-end layer this layer must know the mapping from dicti
 % Private key meganism, now every server has its own private key which is a big security issue --> only operation,offset,length/data are signed, NOT HOST/PORT!
 % Reading from disk in chunks in order to prevent starvation of meerdere threads
 % how errors must be handled: storage engine returns one error --> redo entire process, dictionary service will free unwritten entities
+
+% freelist service:
+% Single point of failure
+% No partition of data
+% fragmentation of memory....
 
 
 %ref: http://twistedmatrix.com/trac/
