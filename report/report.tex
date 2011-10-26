@@ -132,6 +132,8 @@ The timestamped hashing principle ensures that clients cannot read or write data
 Since we use the Python Twisted asynchronous event framework, the implementation of the protocol parser is also created in this project. The problem of non-blocking IO is that you don't know how much data is received per event, and you don't know in advance if this is enough to parse the entire message. It was for this reason necessary to prepend the length of the message in front of the actual message data as shown in \autoref{fig:message-structure}. %TODO add reference: http://code.google.com/intl/nl-NL/apis/protocolbuffers/docs/techniques.html#streaming
 In this way, we are able to stream multiple messages over the same connection, this is very useful for the replication connection that is explained in the following section.
 
+% TODO: explain why original StorageHeader is returned in response message: client might be assynchrounous!
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth,trim=0 24cm 0 3cm,clip=true]{diagrams/message-structure.pdf}
