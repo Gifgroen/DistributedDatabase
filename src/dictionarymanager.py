@@ -250,8 +250,8 @@ def testSetup():
     
 def restart():
     stop()
-    connectServer('localhost', 4248, 4249)
-    connectServer('localhost', 4250, 4251)
+    connectServer('localhost', 8080, 8081)
+    connectServer('localhost', 8082, 8083)
     
     print 'STAND_BY_LIST', STAND_BY_LIST
     startNewReplicaGroup()
