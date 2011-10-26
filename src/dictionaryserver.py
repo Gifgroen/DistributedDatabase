@@ -22,6 +22,8 @@ class DictionaryServer(FixedLengthMessageServer):
         self.factory.protocol = BinaryMessageProtocol
         self.factory.protocolVersion = 0b1
         self.factory.delegate = LocationHandler()
+        self.factory.master = {}
+        self.factory.isMaster = False
         self.factory.replicaList = []
         self.factory.replicaNotifier = ReplicaNotifier()
 
