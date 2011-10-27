@@ -1,5 +1,6 @@
 from storageclient import SimpleStorageTestClient
 from freelistclient import SimpleFreelistTestClient
+from dictionarymanager import DictionaryAdminClient
 from storageserver import DEFAULT_DB_SIZE # TODO FOR TESTING ONLY...
 from generic.protobufconnection import BlockingProtoBufConnection
 from threading import Thread, currentThread

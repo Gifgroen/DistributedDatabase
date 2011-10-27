@@ -3,7 +3,7 @@ The server manager that initiates actions by sending messages to adminDictClient
 """
 from dictionaryclient import DictionaryClient
 
-from generic.communication_pb2 import AdminResponse, RequestContainer, DictionaryLocation, DictionaryKeys
+from generic.communication_pb2 import AdminResponse, RequestContainer, DictionaryLocation, DictionaryKeys, MoveHostOperation
 from generic.protobufconnection import BlockingProtoBufConnection
 
 from threading import Thread
