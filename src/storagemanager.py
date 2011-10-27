@@ -116,7 +116,7 @@ class RaidGroup(object):
         newServer.setXORServer(self.xorServer)
         # TODO, send update to dictionary service
         # inform freelist about server recovery
-        FREELIST_CONNECTION.moveHost(deadServer.host, deadServer.clientPort, runningServer.host, runningServer.clientPort)
+        FREELIST_CONNECTION.moveHost(deadServer.host, deadServer.clientPort, newServer.host, newServer.clientPort)
         return newServer
         
     def _recoverXORServer(self):
