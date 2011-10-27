@@ -91,6 +91,7 @@ class FreeList(object):
     Returns None if the request could not be fulfilled
     """
     def allocSpace(self, numberOfBytes):
+        log.msg("allocSpace(%d)" % numberOfBytes)
         assert numberOfBytes > 0, "allocate request should always be larger than 1 byte"
         if len(self.memtable) == 0:
             return None
@@ -100,6 +101,7 @@ class FreeList(object):
         return [entry.toTuple() for entry in result]
         
     def releaseSpace(self, host, port, offset, length):
+        log.msg("releaseSpace(%s, %d, %d, %d)" % (host, port, offset, length))
         self.memtable.append(FreeListEntry(host, port, offset, length))
 
     """
@@ -111,6 +113,7 @@ class FreeList(object):
     combination.
     """
     def moveHost(self, fromHost, fromPort, toHost, toPort):
+        log.msg("moveHost(%s, %d, %s, %p)" % (fromHost, fromPort, toHost, toPort))
         for entry in memtable:
             if entry.host == fromHost and entry.port == fromPort:
                 entry.host = toHost

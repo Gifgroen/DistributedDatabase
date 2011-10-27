@@ -1,4 +1,6 @@
 from storageclient import SimpleStorageTestClient
+from freelistclient import SimpleFreelistTestClient
+from storageserver import DEFAULT_DB_SIZE # TODO FOR TESTING ONLY...
 from generic.protobufconnection import BlockingProtoBufConnection
 from threading import Thread
 from time import time, sleep
@@ -12,6 +14,8 @@ STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
 
 TEST_MODE = True # disables checking for hosts
+
+FREELIST_CONNECTION = None
 
 class AdminStorageClient(object):
     def __init__(self, host, port):
@@ -95,7 +99,10 @@ class RaidGroup(object):
         self.serverB.setXORServer(x)
         print 'servers started'
         
-        # TODO notify freelist about free space
+        FREELIST_CONNECTION.releaseSpace([
+            (a.host, a.clientPort, 0, DEFAULT_DB_SIZE),
+            (b.host, b.clientPort, 0, DEFAULT_DB_SIZE)
+        ])
         
     def _recover(self, server1, server2):
         newServer = _createGroup([server1, server2])[2]
@@ -107,7 +114,9 @@ class RaidGroup(object):
     def _recoverServer(self, deadServer, runningServer, xor):
         newServer = self._recover(runningServer, xor)
         newServer.setXORServer(self.xorServer)
-        # TODO, send update to dictionary service and freelist
+        # TODO, send update to dictionary service
+        # inform freelist about server recovery
+        FREELIST_CONNECTION.moveHost(deadServer.host, deadServer.port, runningServer.host, runningServer.port)
         return newServer
         
     def _recoverXORServer(self):
@@ -193,9 +202,16 @@ def stop():
     for group in ACTIVE_LIST:
         group.stop()
     del ACTIVE_LIST[:]
+    global FREELIST_CONNECTION # prevents undefined var error...
+    if FREELIST_CONNECTION:
+        FREELIST_CONNECTION.stop()
+    FREELIST_CONNECTION = None
     
 def restart():
     stop()
+    global FREELIST_CONNECTION
+    FREELIST_CONNECTION = SimpleFreelistTestClient('localhost', 8000)
+    
     addServer('localhost', 8080, 8081)
     addServer('localhost', 8082, 8083)
     addServer('localhost', 8084, 8085)
