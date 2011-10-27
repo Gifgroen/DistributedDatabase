@@ -40,12 +40,17 @@ class DictionaryRequestHandler():
         connection = BlockingProtoBufConnection(DictionaryResponseHeader)
         connection.start(master['host'], master['port'])
         connection.sendMsg(redirectMsg)
+        msg = connection.readMsg()
         connection.stop()
+        
+        return msg
         
 
     def parsedMessage(self, msgData):
         requestMessage = DictionaryHeader()
         requestMessage.ParseFromString(msgData)
+        
+        log.msg(">>> got message: ", requestMessage)
         
         isMaster = self.protocol.factory.isMaster
         opp = requestMessage.operation
@@ -53,15 +58,17 @@ class DictionaryRequestHandler():
         if isMaster:
             status = self.protocol.factory.delegate.handleRequest(requestMessage)
             requestMessage.issuer = "master"
-            if opp != DictionaryHeader.GET:
+            if requestMessage.operation == DictionaryHeader.ADD:
+                requestMessage.key = status.key
+            if opp != DictionaryHeader.GET and opp != DictionaryHeader.HEARTBEAT and len(self.protocol.factory.replicaList) != 0:
                 self.replicate(requestMessage)
         else:
             if requestMessage.issuer == "master":
                 status = self.protocol.factory.delegate.handleRequest(requestMessage)
+            elif requestMessage.issuer == "client" and requestMessage.operation == DictionaryHeader.GET:
+                status = self.protocol.factory.delegate.handleRequest(requestMessage)
             else:
-                status = DictionaryResponseHeader()
-                status.status = DictionaryResponseHeader.OK
-                self.redirect(requestMessage)
+                status = self.redirect(requestMessage)
 
         # Respond with status
         self.protocol.writeMsg(status)

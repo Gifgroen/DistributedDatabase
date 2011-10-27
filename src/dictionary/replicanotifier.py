@@ -6,7 +6,7 @@ from twisted.python import log
 from generic.protobufconnection import BlockingProtoBufConnection
 from generic.crypto import signAndTimestampHashedStorageHeader
 
-from generic.communication_pb2 import AdminResponse
+from generic.communication_pb2 import DictionaryResponseHeader
 
 """
 TODO: this class is currently just a simple wrapper
@@ -16,7 +16,7 @@ Also: fix code clones with storagedb queue.
 """
 class ReplicaNotifier(object):
     def __init__(self):
-        self.connection = BlockingProtoBufConnection(AdminResponse)
+        self.connection = BlockingProtoBufConnection(DictionaryResponseHeader)
         self.cont = False
         self.work_queue = Queue() # threadsafe queue
         reactor.addSystemEventTrigger('before', 'shutdown', self.stop)
@@ -30,11 +30,13 @@ class ReplicaNotifier(object):
         log.msg('self.connection.start(%s,%d)' % (host, port))
         self.connection.start(host, port)
 
+        log.msg("handleReplica: ", msg)
+
         # send header
         self.connection.sendMsg(msg)
         # read response message, and signal callback
         response = self.connection.readMsg()
-        if response.status == AdminResponse.OK:
+        if response.status == DictionaryResponseHeader.OK:
             log.msg("OK")
         else:
             log.msg("ERROR")

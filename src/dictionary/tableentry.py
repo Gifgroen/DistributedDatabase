@@ -16,13 +16,13 @@ class LocationEntry(object):
         self.offset = offset
         self.length = length
 
-    def toDict(self):
-        return {
-            "host": self.host,
-            "port": self.port,
-            "offset": self.offset,
-            "length": self.length,
-        }
+    def toTuple(self):
+        return(
+            self.host,
+            self.port,
+            self.offset,
+            self.length,
+        )
 
     def toMessage(self):
         dataLocation = DataLocation()
