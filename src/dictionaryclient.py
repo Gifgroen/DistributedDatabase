@@ -46,13 +46,16 @@ class DictionaryClient(object):
         self.stop()
         return False, None
     
-    def doADD(self, sizeOfData):
+    def doADD(self, sizeOfData, key=None):
         req = DictionaryHeader()
         req.size = sizeOfData
         req.issuer = "client"
+        if key is not None:
+            print "key", key
+            req.key = key
         #req.key = "foobar"  # REMOVE AFTER TESTING, RESULTS IN BAD BEHAVIOUR IN PRODUCTION ENV
         req.operation = DictionaryHeader.ADD
-        
+        print req
         self.sendRequest(req)
         response = self.readMsg()
         if response.status == DictionaryResponseHeader.OK:
@@ -75,7 +78,7 @@ class DictionaryClient(object):
         if response.status == DictionaryResponseHeader.OK:
             return True, response.locations
             
-        print response.status
+        print "Error:", response.status
         self.stop()
         return False, None
         
@@ -91,7 +94,7 @@ class DictionaryClient(object):
         if response.status == DictionaryResponseHeader.OK:
             return True, response
         
-        print response.status
+        print "Error:", response.status
         self.stop()
         return False, None
 
