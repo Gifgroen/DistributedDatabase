@@ -128,8 +128,8 @@ message RequestContainer {
 }
 
 message MoveHostOperation {
-    required DictionaryLocation from = 1;
-    required DictionaryLocation to = 2;
+    required DictionaryLocation moveFrom = 1;
+    required DictionaryLocation moveTo = 2;
 }
 
 message DictionaryLocation {

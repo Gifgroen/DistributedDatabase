@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='communication.proto',
   package='',
-  serialized_pb='\n\x13\x63ommunication.proto\"\x99\x01\n\x13HashedStorageHeader\x12\x39\n\rhashAlgorithm\x18\x01 \x02(\x0e\x32\".HashedStorageHeader.HashAlgorithm\x12\x0c\n\x04hash\x18\x02 \x02(\x0c\x12\x1e\n\x06header\x18\x03 \x02(\x0b\x32\x0e.StorageHeader\"\x19\n\rHashAlgorithm\x12\x08\n\x04SHA1\x10\x01\"\xa7\x01\n\rStorageHeader\x12+\n\toperation\x18\x01 \x02(\x0e\x32\x18.StorageHeader.Operation\x12\x0e\n\x06offset\x18\x02 \x02(\x04\x12\x0e\n\x06length\x18\x03 \x02(\x04\x12\x18\n\x10requestTimestamp\x18\x04 \x02(\x04\"/\n\tOperation\x12\x08\n\x04READ\x10\x01\x12\t\n\x05WRITE\x10\x02\x12\r\n\tXOR_WRITE\x10\x03\"\x95\x01\n\x15StorageResponseHeader\x12-\n\x06status\x18\x01 \x02(\x0e\x32\x1d.StorageResponseHeader.Status\x12\x1e\n\x06header\x18\x02 \x02(\x0b\x32\x0e.StorageHeader\x12\x10\n\x08\x65rrorMsg\x18\x03 \x01(\t\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\xb6\x01\n\x18\x44ictionaryResponseHeader\x12\x30\n\x06status\x18\x01 \x02(\x0e\x32 .DictionaryResponseHeader.Status\x12 \n\tlocations\x18\x02 \x03(\x0b\x32\r.DataLocation\x12\x0b\n\x03key\x18\x03 \x01(\t\"9\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\x11\n\rNO_FREE_SPACE\x10\x02\x12\x14\n\x10NOT_EXISTING_KEY\x10\x03\"P\n\x0c\x44\x61taLocation\x12$\n\x06header\x18\x01 \x02(\x0b\x32\x14.HashedStorageHeader\x12\x0c\n\x04port\x18\x02 \x02(\x04\x12\x0c\n\x04host\x18\x03 \x02(\t\"\xa7\x01\n\x10\x44ictionaryHeader\x12.\n\toperation\x18\x01 \x02(\x0e\x32\x1b.DictionaryHeader.Operation\x12\x0e\n\x06issuer\x18\x02 \x02(\t\x12\x0b\n\x03key\x18\x03 \x01(\t\x12\x0c\n\x04size\x18\x04 \x01(\x04\"8\n\tOperation\x12\x07\n\x03GET\x10\x01\x12\x07\n\x03\x41\x44\x44\x10\x02\x12\n\n\x06\x44\x45LETE\x10\x03\x12\r\n\tHEARTBEAT\x10\x04\"\xa2\x01\n\x1cStorageAdminRequestContainer\x12:\n\toperation\x18\x01 \x02(\x0e\x32\'.StorageAdminRequestContainer.Operation\x12\x13\n\x0bmessageData\x18\x02 \x01(\x0c\"1\n\tOperation\x12\x12\n\x0eSET_XOR_SERVER\x10\x01\x12\x10\n\x0cRECOVER_FROM\x10\x02\"8\n\x1aStorageAdminServerLocation\x12\x0c\n\x04host\x18\x01 \x02(\t\x12\x0c\n\x04port\x18\x02 \x02(\x04\"{\n\x1dStorageAdminRecoveryOperation\x12,\n\x07serverA\x18\x01 \x02(\x0b\x32\x1b.StorageAdminServerLocation\x12,\n\x07serverB\x18\x02 \x02(\x0b\x32\x1b.StorageAdminServerLocation\"s\n\x14StorageAdminResponse\x12,\n\x06status\x18\x01 \x02(\x0e\x32\x1c.StorageAdminResponse.Status\x12\x10\n\x08\x65rrorMsg\x18\x02 \x01(\t\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"e\n\rAdminResponse\x12%\n\x06status\x18\x01 \x02(\x0e\x32\x15.AdminResponse.Status\x12\x10\n\x08\x65rrorMsg\x18\x02 \x01(\t\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"@\n\x0e\x44ictionaryKeys\x12\x0c\n\x04keys\x18\x01 \x03(\t\x12 \n\x08response\x18\x02 \x02(\x0b\x32\x0e.AdminResponse\"\xc9\x01\n\x10RequestContainer\x12\x34\n\x0cnotification\x18\x01 \x02(\x0e\x32\x1e.RequestContainer.Notification\x12\x13\n\x0bmessageData\x18\x02 \x01(\x0c\"j\n\x0cNotification\x12\r\n\tNEW_SLAVE\x10\x01\x12\x0e\n\nNEW_MASTER\x10\x02\x12\r\n\tIS_MASTER\x10\x03\x12\x0c\n\x08IS_SLAVE\x10\x04\x12\x0f\n\x0bRESET_STATE\x10\x05\x12\r\n\tMOVE_HOST\x10\x06\"W\n\x11MoveHostOperation\x12!\n\x04\x66rom\x18\x01 \x02(\x0b\x32\x13.DictionaryLocation\x12\x1f\n\x02to\x18\x02 \x02(\x0b\x32\x13.DictionaryLocation\"0\n\x12\x44ictionaryLocation\x12\x0c\n\x04host\x18\x01 \x02(\t\x12\x0c\n\x04port\x18\x02 \x02(\x04\"K\n\rSpaceLocation\x12\x0c\n\x04host\x18\x01 \x02(\t\x12\x0c\n\x04port\x18\x02 \x02(\x04\x12\x0e\n\x06offset\x18\x03 \x02(\x04\x12\x0e\n\x06length\x18\x04 \x02(\x04\"\x91\x02\n\x0f\x46reelistRequest\x12-\n\toperation\x18\x01 \x02(\x0e\x32\x1a.FreelistRequest.Operation\x12\x15\n\rnumberOfBytes\x18\x02 \x01(\x04\x12%\n\rreleasedSpace\x18\x03 \x03(\x0b\x32\x0e.SpaceLocation\x12-\n\x08moveFrom\x18\x04 \x01(\x0b\x32\x1b.StorageAdminServerLocation\x12+\n\x06moveTo\x18\x05 \x01(\x0b\x32\x1b.StorageAdminServerLocation\"5\n\tOperation\x12\x0c\n\x08\x41LLOCATE\x10\x01\x12\x0b\n\x07RELEASE\x10\x02\x12\r\n\tMOVE_HOST\x10\x03\"\x8e\x01\n\x10\x46reeListResponse\x12(\n\x06status\x18\x01 \x02(\x0e\x32\x18.FreeListResponse.Status\x12\x10\n\x08\x65rrorMsg\x18\x02 \x01(\t\x12!\n\tfreeSpace\x18\x03 \x03(\x0b\x32\x0e.SpaceLocation\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\x42\x02H\x03')
+  serialized_pb='\n\x13\x63ommunication.proto\"\x99\x01\n\x13HashedStorageHeader\x12\x39\n\rhashAlgorithm\x18\x01 \x02(\x0e\x32\".HashedStorageHeader.HashAlgorithm\x12\x0c\n\x04hash\x18\x02 \x02(\x0c\x12\x1e\n\x06header\x18\x03 \x02(\x0b\x32\x0e.StorageHeader\"\x19\n\rHashAlgorithm\x12\x08\n\x04SHA1\x10\x01\"\xa7\x01\n\rStorageHeader\x12+\n\toperation\x18\x01 \x02(\x0e\x32\x18.StorageHeader.Operation\x12\x0e\n\x06offset\x18\x02 \x02(\x04\x12\x0e\n\x06length\x18\x03 \x02(\x04\x12\x18\n\x10requestTimestamp\x18\x04 \x02(\x04\"/\n\tOperation\x12\x08\n\x04READ\x10\x01\x12\t\n\x05WRITE\x10\x02\x12\r\n\tXOR_WRITE\x10\x03\"\x95\x01\n\x15StorageResponseHeader\x12-\n\x06status\x18\x01 \x02(\x0e\x32\x1d.StorageResponseHeader.Status\x12\x1e\n\x06header\x18\x02 \x02(\x0b\x32\x0e.StorageHeader\x12\x10\n\x08\x65rrorMsg\x18\x03 \x01(\t\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\xb6\x01\n\x18\x44ictionaryResponseHeader\x12\x30\n\x06status\x18\x01 \x02(\x0e\x32 .DictionaryResponseHeader.Status\x12 \n\tlocations\x18\x02 \x03(\x0b\x32\r.DataLocation\x12\x0b\n\x03key\x18\x03 \x01(\t\"9\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\x11\n\rNO_FREE_SPACE\x10\x02\x12\x14\n\x10NOT_EXISTING_KEY\x10\x03\"P\n\x0c\x44\x61taLocation\x12$\n\x06header\x18\x01 \x02(\x0b\x32\x14.HashedStorageHeader\x12\x0c\n\x04port\x18\x02 \x02(\x04\x12\x0c\n\x04host\x18\x03 \x02(\t\"\xa7\x01\n\x10\x44ictionaryHeader\x12.\n\toperation\x18\x01 \x02(\x0e\x32\x1b.DictionaryHeader.Operation\x12\x0e\n\x06issuer\x18\x02 \x02(\t\x12\x0b\n\x03key\x18\x03 \x01(\t\x12\x0c\n\x04size\x18\x04 \x01(\x04\"8\n\tOperation\x12\x07\n\x03GET\x10\x01\x12\x07\n\x03\x41\x44\x44\x10\x02\x12\n\n\x06\x44\x45LETE\x10\x03\x12\r\n\tHEARTBEAT\x10\x04\"\xa2\x01\n\x1cStorageAdminRequestContainer\x12:\n\toperation\x18\x01 \x02(\x0e\x32\'.StorageAdminRequestContainer.Operation\x12\x13\n\x0bmessageData\x18\x02 \x01(\x0c\"1\n\tOperation\x12\x12\n\x0eSET_XOR_SERVER\x10\x01\x12\x10\n\x0cRECOVER_FROM\x10\x02\"8\n\x1aStorageAdminServerLocation\x12\x0c\n\x04host\x18\x01 \x02(\t\x12\x0c\n\x04port\x18\x02 \x02(\x04\"{\n\x1dStorageAdminRecoveryOperation\x12,\n\x07serverA\x18\x01 \x02(\x0b\x32\x1b.StorageAdminServerLocation\x12,\n\x07serverB\x18\x02 \x02(\x0b\x32\x1b.StorageAdminServerLocation\"s\n\x14StorageAdminResponse\x12,\n\x06status\x18\x01 \x02(\x0e\x32\x1c.StorageAdminResponse.Status\x12\x10\n\x08\x65rrorMsg\x18\x02 \x01(\t\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"e\n\rAdminResponse\x12%\n\x06status\x18\x01 \x02(\x0e\x32\x15.AdminResponse.Status\x12\x10\n\x08\x65rrorMsg\x18\x02 \x01(\t\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"@\n\x0e\x44ictionaryKeys\x12\x0c\n\x04keys\x18\x01 \x03(\t\x12 \n\x08response\x18\x02 \x02(\x0b\x32\x0e.AdminResponse\"\xc9\x01\n\x10RequestContainer\x12\x34\n\x0cnotification\x18\x01 \x02(\x0e\x32\x1e.RequestContainer.Notification\x12\x13\n\x0bmessageData\x18\x02 \x01(\x0c\"j\n\x0cNotification\x12\r\n\tNEW_SLAVE\x10\x01\x12\x0e\n\nNEW_MASTER\x10\x02\x12\r\n\tIS_MASTER\x10\x03\x12\x0c\n\x08IS_SLAVE\x10\x04\x12\x0f\n\x0bRESET_STATE\x10\x05\x12\r\n\tMOVE_HOST\x10\x06\"_\n\x11MoveHostOperation\x12%\n\x08moveFrom\x18\x01 \x02(\x0b\x32\x13.DictionaryLocation\x12#\n\x06moveTo\x18\x02 \x02(\x0b\x32\x13.DictionaryLocation\"0\n\x12\x44ictionaryLocation\x12\x0c\n\x04host\x18\x01 \x02(\t\x12\x0c\n\x04port\x18\x02 \x02(\x04\"K\n\rSpaceLocation\x12\x0c\n\x04host\x18\x01 \x02(\t\x12\x0c\n\x04port\x18\x02 \x02(\x04\x12\x0e\n\x06offset\x18\x03 \x02(\x04\x12\x0e\n\x06length\x18\x04 \x02(\x04\"\x91\x02\n\x0f\x46reelistRequest\x12-\n\toperation\x18\x01 \x02(\x0e\x32\x1a.FreelistRequest.Operation\x12\x15\n\rnumberOfBytes\x18\x02 \x01(\x04\x12%\n\rreleasedSpace\x18\x03 \x03(\x0b\x32\x0e.SpaceLocation\x12-\n\x08moveFrom\x18\x04 \x01(\x0b\x32\x1b.StorageAdminServerLocation\x12+\n\x06moveTo\x18\x05 \x01(\x0b\x32\x1b.StorageAdminServerLocation\"5\n\tOperation\x12\x0c\n\x08\x41LLOCATE\x10\x01\x12\x0b\n\x07RELEASE\x10\x02\x12\r\n\tMOVE_HOST\x10\x03\"\x8e\x01\n\x10\x46reeListResponse\x12(\n\x06status\x18\x01 \x02(\x0e\x32\x18.FreeListResponse.Status\x12\x10\n\x08\x65rrorMsg\x18\x02 \x01(\t\x12!\n\tfreeSpace\x18\x03 \x03(\x0b\x32\x0e.SpaceLocation\"\x1b\n\x06Status\x12\x06\n\x02OK\x10\x01\x12\t\n\x05\x45RROR\x10\x02\x42\x02H\x03')
 
 
 
@@ -253,8 +253,8 @@ _FREELISTREQUEST_OPERATION = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=2213,
-  serialized_end=2266,
+  serialized_start=2221,
+  serialized_end=2274,
 )
 
 _FREELISTRESPONSE_STATUS = descriptor.EnumDescriptor(
@@ -807,14 +807,14 @@ _MOVEHOSTOPERATION = descriptor.Descriptor(
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='from', full_name='MoveHostOperation.from', index=0,
+      name='moveFrom', full_name='MoveHostOperation.moveFrom', index=0,
       number=1, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='to', full_name='MoveHostOperation.to', index=1,
+      name='moveTo', full_name='MoveHostOperation.moveTo', index=1,
       number=2, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -830,7 +830,7 @@ _MOVEHOSTOPERATION = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=1776,
-  serialized_end=1863,
+  serialized_end=1871,
 )
 
 
@@ -864,8 +864,8 @@ _DICTIONARYLOCATION = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1865,
-  serialized_end=1913,
+  serialized_start=1873,
+  serialized_end=1921,
 )
 
 
@@ -913,8 +913,8 @@ _SPACELOCATION = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1915,
-  serialized_end=1990,
+  serialized_start=1923,
+  serialized_end=1998,
 )
 
 
@@ -970,8 +970,8 @@ _FREELISTREQUEST = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1993,
-  serialized_end=2266,
+  serialized_start=2001,
+  serialized_end=2274,
 )
 
 
@@ -1013,8 +1013,8 @@ _FREELISTRESPONSE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2269,
-  serialized_end=2411,
+  serialized_start=2277,
+  serialized_end=2419,
 )
 
 _HASHEDSTORAGEHEADER.fields_by_name['hashAlgorithm'].enum_type = _HASHEDSTORAGEHEADER_HASHALGORITHM
@@ -1042,8 +1042,8 @@ _ADMINRESPONSE_STATUS.containing_type = _ADMINRESPONSE;
 _DICTIONARYKEYS.fields_by_name['response'].message_type = _ADMINRESPONSE
 _REQUESTCONTAINER.fields_by_name['notification'].enum_type = _REQUESTCONTAINER_NOTIFICATION
 _REQUESTCONTAINER_NOTIFICATION.containing_type = _REQUESTCONTAINER;
-_MOVEHOSTOPERATION.fields_by_name['from'].message_type = _DICTIONARYLOCATION
-_MOVEHOSTOPERATION.fields_by_name['to'].message_type = _DICTIONARYLOCATION
+_MOVEHOSTOPERATION.fields_by_name['moveFrom'].message_type = _DICTIONARYLOCATION
+_MOVEHOSTOPERATION.fields_by_name['moveTo'].message_type = _DICTIONARYLOCATION
 _FREELISTREQUEST.fields_by_name['operation'].enum_type = _FREELISTREQUEST_OPERATION
 _FREELISTREQUEST.fields_by_name['releasedSpace'].message_type = _SPACELOCATION
 _FREELISTREQUEST.fields_by_name['moveFrom'].message_type = _STORAGEADMINSERVERLOCATION

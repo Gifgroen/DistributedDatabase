@@ -50,10 +50,10 @@ class DictionaryAdminRequestHandler(object):
         
     def moveHost(self, msg):
         self.dictServer.factory.delegate.filetable.moveHost(
-            msg.from.host,
-            msg.from.port,
-            msg.to.host,
-            msg.to.port
+            msg.moveFrom.host,
+            msg.moveFrom.port,
+            msg.moveTo.host,
+            msg.moveTo.port
         )
 
     def parsedMessage(self, msgData):

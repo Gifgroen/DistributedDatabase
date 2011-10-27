@@ -98,10 +98,10 @@ class DictionaryAdminClient(object):
 
     def moveHost(self, fromHost, fromPort, toHost, toPort):
         mh = MoveHostOperation()
-        mh.from.host = fromHost
-        mh.from.port = fromPort
-        mh.to.host = toHost
-        mh.to.port = toPort
+        mh.moveFrom.host = fromHost
+        mh.moveFrom.port = fromPort
+        mh.moveTo.host = toHost
+        mh.moveTo.port = toPort
         self._send(mh, RequestContainer.MOVE_HOST)
         
     """
