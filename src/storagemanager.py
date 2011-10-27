@@ -2,7 +2,7 @@ from storageclient import SimpleStorageTestClient
 from freelistclient import SimpleFreelistTestClient
 from storageserver import DEFAULT_DB_SIZE # TODO FOR TESTING ONLY...
 from generic.protobufconnection import BlockingProtoBufConnection
-from threading import Thread
+from threading import Thread, currentThread
 from time import time, sleep
 import socket
 
@@ -16,6 +16,8 @@ ACTIVE_LIST = [] # Raidgroups
 TEST_MODE = True # disables checking for hosts
 
 FREELIST_CONNECTION = None
+
+HEARTBEAT_THREAD = None
 
 class AdminStorageClient(object):
     def __init__(self, host, port):
@@ -150,7 +152,8 @@ class RaidGroup(object):
         return '(A=%s,B=%s,X=%s)' % (self.serverA, self.serverB, self.xorServer)
             
 def heartBeatJob():
-    while True:
+    global HEARTBEAT_THREAD
+    while HEARTBEAT_THREAD == currentThread():
         #print 'heartBeatJob'
         start = time()
         for group in ACTIVE_LIST:
@@ -159,11 +162,7 @@ def heartBeatJob():
         sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
         #print 'sleep %d seconds' % sleep_secs
         sleep(sleep_secs)
-            
-    
-def startup():
-    t = Thread(target=heartBeatJob, name='HeartBeatJob')
-    t.start()
+    print 'heartbeat thread stopped'
     
 def addServer(host, clientPort, adminPort):
     newServer = Connection(host, clientPort, adminPort)
@@ -190,12 +189,10 @@ def startNewGroup():
     newGroup = RaidGroup(*servers)
     ACTIVE_LIST.append(newGroup)
 
-    
-def testSetup():
-    startup()
-    restart()
-    
+
 def stop():
+    global HEARTBEAT_THREAD
+    HEARTBEAT_THREAD = None
     for server in STAND_BY_LIST:
         server.stop()
     del STAND_BY_LIST[:]
@@ -207,8 +204,11 @@ def stop():
         FREELIST_CONNECTION.stop()
     FREELIST_CONNECTION = None
     
-def restart():
-    stop()
+def start():
+    global HEARTBEAT_THREAD
+    HEARTBEAT_THREAD = Thread(target=heartBeatJob, name='HeartBeatJob')
+    HEARTBEAT_THREAD.start()
+    
     global FREELIST_CONNECTION
     FREELIST_CONNECTION = SimpleFreelistTestClient('localhost', 8000)
     
