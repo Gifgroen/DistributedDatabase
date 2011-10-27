@@ -1,4 +1,4 @@
-from generic.communication_pb2 import RequestContainer, DictionaryLocation, AdminResponse, DictionaryKeys
+from generic.communication_pb2 import RequestContainer, DictionaryLocation, AdminResponse, DictionaryKeys, MoveHostOperation
 
 from generic.genericserver import FixedLengthMessageServer
 from generic.protocol import BinaryMessageProtocol
@@ -47,6 +47,14 @@ class DictionaryAdminRequestHandler(object):
         else:
             reply.status = AdminResponse.OK
         self.protocol.writeMsg(reply)
+        
+    def moveHost(self, msg):
+        self.dictServer.factory.delegate.filetable.moveHost(
+            msg.from.host,
+            msg.from.port,
+            msg.to.host,
+            msg.to.port
+        )
 
     def parsedMessage(self, msgData):
         log.msg(">>> admin message received")
@@ -76,6 +84,11 @@ class DictionaryAdminRequestHandler(object):
         elif incoming.notification == RequestContainer.RESET_STATE:
             self.resetGroupState()
             log.msg("Resetting state...")
+            self._reply()
+        elif incoming.notification == RequestContainer.MOVE_HOST:
+            msg = MoveHostOperation()
+            msg.ParseFromString(incoming.messageData)
+            self.moveHost(msg)
             self._reply()
         else:
             self._reply("Unknown dictionary admin operation")

@@ -96,6 +96,14 @@ class DictionaryAdminClient(object):
         self._send(None, RequestContainer.IS_MASTER)
         return self._checkResponse()
 
+    def moveHost(self, fromHost, fromPort, toHost, toPort):
+        mh = MoveHostOperation()
+        mh.from.host = fromHost
+        mh.from.port = fromPort
+        mh.to.host = toHost
+        mh.to.port = toPort
+        self._send(mh, RequestContainer.MOVE_HOST)
+        
     """
     Close the connection
     """

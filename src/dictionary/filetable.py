@@ -47,5 +47,12 @@ class DictionaryTable(object):
             del self.locationDict[key]
             return True
         return False
+        
+    def moveHost(self, fromHost, fromPort, toHost, toPort):
+        for entryList in self.locationDict.values():
+            for entry in entryList:
+                if entry.host == fromHost and entry.port == fromPort:
+                    entry.host = toHost
+                    entry.port = toPort
 
         

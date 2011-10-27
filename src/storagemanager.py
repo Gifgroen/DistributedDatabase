@@ -16,6 +16,7 @@ ACTIVE_LIST = [] # Raidgroups
 TEST_MODE = True # disables checking for hosts
 
 FREELIST_CONNECTION = None
+DICTIONARY_CONNECTION = None
 
 HEARTBEAT_THREAD = None
 
@@ -116,7 +117,8 @@ class RaidGroup(object):
     def _recoverServer(self, deadServer, runningServer, xor):
         newServer = self._recover(runningServer, xor)
         newServer.setXORServer(self.xorServer)
-        # TODO, send update to dictionary service
+        # send update to dictionary service
+        DICTIONARY_CONNECTION.moveHost(deadServer.host, deadServer.clientPort, newServer.host, newServer.clientPort)
         # inform freelist about server recovery
         FREELIST_CONNECTION.moveHost(deadServer.host, deadServer.clientPort, newServer.host, newServer.clientPort)
         return newServer
@@ -199,19 +201,23 @@ def stop():
     for group in ACTIVE_LIST:
         group.stop()
     del ACTIVE_LIST[:]
-    global FREELIST_CONNECTION # prevents undefined var error...
+    global FREELIST_CONNECTION, DICTIONARY_CONNECTION # prevents undefined var error...
     if FREELIST_CONNECTION:
         FREELIST_CONNECTION.stop()
     FREELIST_CONNECTION = None
+    if DICTIONARY_CONNECTION:
+        DICTIONARY_CONNECTION.stop()
+    DICTIONARY_CONNECTION = None
     
 def start():
     global HEARTBEAT_THREAD
     HEARTBEAT_THREAD = Thread(target=heartBeatJob, name='HeartBeatJob')
     HEARTBEAT_THREAD.start()
     
-    global FREELIST_CONNECTION
-    FREELIST_CONNECTION = SimpleFreelistTestClient('localhost', 8000)
-    
+    global FREELIST_CONNECTION, DICTIONARY_CONNECTION
+    #FREELIST_CONNECTION = SimpleFreelistTestClient('localhost', 8000)
+    FREELIST_CONNECTION = SimpleFreelistTestClient('wingtip29.wing.rug.nl', 8000)
+    DICTIONARY_CONNECTION = DictionaryAdminClient('129.125.219.84', 4243)
     addServer('localhost', 8080, 8081)
     addServer('localhost', 8082, 8083)
     addServer('localhost', 8084, 8085)
