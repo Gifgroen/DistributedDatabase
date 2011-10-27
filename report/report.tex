@@ -172,6 +172,8 @@ Release that the above equation assumes that all servers initially start in corr
 
 Since a storage service connection allows to stream messages over one single connection. A public storage instance only has to maintain this connection and forward all writes that are xored with the current data to the xor-partner instance.
 
+% TODO REPLICATION: return after replicatoin is performed.....
+
 \paragraph{Management}
 The storage instances itself does not guarantee fault-tolerant automatically. If a single storage instance crashes, there must be a system that automatically starts a restore of the lost data. Also, this system must be able to create RAID groups itself, and communicate the correct parity server to each storage instance.
 
