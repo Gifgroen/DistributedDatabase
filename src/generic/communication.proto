@@ -41,7 +41,6 @@ message DictionaryResponseHeader {
         OK = 1;
         NO_FREE_SPACE = 2;
         NOT_EXISTING_KEY = 3;
-        REDIRECT = 4;
     }
     required Status status = 1;
     repeated DataLocation locations = 2;
@@ -122,9 +121,15 @@ message RequestContainer {
         IS_MASTER = 3;
         IS_SLAVE = 4;
         RESET_STATE = 5;
+        MOVE_HOST = 6;
     }
     required Notification notification = 1;
     optional bytes messageData = 2;
+}
+
+message MoveHostOperation {
+    required DictionaryLocation from;
+    required DictionaryLocation to;
 }
 
 message DictionaryLocation {
