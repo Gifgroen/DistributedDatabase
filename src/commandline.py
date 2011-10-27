@@ -122,5 +122,7 @@ def write(shortkey, offset, data):
 def read(shortkey, offset, length):
     if shortkey not in connections:
         raise Exception('%s does not exist' % shortkey)
-    if not connections[shortkey].readData(offset, length):
+    readData = connections[shortkey].readData(offset, length)
+    if not readData:
         del connections[shortkey] 
+    return readData
