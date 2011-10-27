@@ -57,7 +57,7 @@ class DictionaryClient(object):
         response = self.readMsg()
         if response.status == DictionaryResponseHeader.OK:
             self.key = response.key
-            return True, response.key
+            return True, response.key, response.locations
         
         print responseHeader.status
         self.stop()

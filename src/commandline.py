@@ -91,10 +91,11 @@ def disconnectAll():
 def add(shortkey, size):
     if shortkey not in dictionary_connections:
         raise Exception('%s does not exist' % shortkey)
-    status, key = dictionary_connections[shortkey].doADD(size)
+    status, key, locs = dictionary_connections[shortkey].doADD(size)
     if not status:
-        del dictionary_connections[shortkey]
-    print key
+        del dictionary_connections[shortkey] # TODO DISCONNECT
+    print key, locs
+    return key, locs
     
 def delete(shortkey, key):
     if shortkey not in dictionary_connections:
