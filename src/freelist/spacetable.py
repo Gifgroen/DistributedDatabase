@@ -113,8 +113,8 @@ class FreeList(object):
     combination.
     """
     def moveHost(self, fromHost, fromPort, toHost, toPort):
-        log.msg("moveHost(%s, %d, %s, %p)" % (fromHost, fromPort, toHost, toPort))
-        for entry in memtable:
+        log.msg("moveHost(%s, %d, %s, %d)" % (fromHost, fromPort, toHost, toPort))
+        for entry in self.memtable:
             if entry.host == fromHost and entry.port == fromPort:
                 entry.host = toHost
                 entry.port = toPort
@@ -151,6 +151,8 @@ if __name__ == '__main__':
     testAlloc(12)
     testAlloc(8)
     testAlloc(4)
+    f.moveHost('A', 8080, "R", 9999)
+    log.msg(repr(f))
     
     
     
