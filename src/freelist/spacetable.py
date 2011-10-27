@@ -98,11 +98,15 @@ class FreeList(object):
         result = self._roundRobinConsumptionStrategy(numberOfBytes)
         if result is None:
             return None
-        return [entry.toTuple() for entry in result]
+        allocatedSpaces = [entry.toTuple() for entry in result]
+        log.msg("Alocated: %s" % allocatedSpaces)
+        log.msg(repr(self))
+        return allocatedSpaces
         
     def releaseSpace(self, host, port, offset, length):
         log.msg("releaseSpace(%s, %d, %d, %d)" % (host, port, offset, length))
         self.memtable.append(FreeListEntry(host, port, offset, length))
+        log.msg(repr(self))
 
     """
     If a storage server goes down or is replaced, the freelist
@@ -118,6 +122,7 @@ class FreeList(object):
             if entry.host == fromHost and entry.port == fromPort:
                 entry.host = toHost
                 entry.port = toPort
+        log.msg(repr(self))
                 
     def __repr__(self):
         return "Freelist:\t%s" % (self.memtable)
