@@ -10,9 +10,11 @@ from threading import Thread
 from time import time, sleep
 import socket
 
+from twisted.python import log
+
 HEARTBEAT_SECONDS = 10 # low for testing
 
-REPLICA_GROUP_SIZE = 2
+REPLICA_GROUP_SIZE = 3
 
 STAND_BY_LIST = []   # Connections
 REPLICA_LIST = []    # Replicagroups
@@ -112,6 +114,7 @@ class Connection(object):
     def sendHeartbeat(self):
         try:
             self.client.doHeartbeat()
+            log.msg("HEARTBEAT SENT")
         except socket.error:
             return False
         return True
@@ -175,6 +178,9 @@ class ReplicaGroup(object):
             slave.setSlave(master)              # Inform the the slave that it is a slave of masterConnection
             master.addNewSlaveServer(slave)     # inform the master of a new slave
 
+    def addSlave(self, slaveCon):
+        self.group['slave'].append(slaveCon)
+        self.initiate()
     
     # We need to recover the master (aka set a new one)!! 
     def recoverMaster(self):
@@ -188,7 +194,9 @@ class ReplicaGroup(object):
     # function that WARNS that a slave is down
     def fallenSlave(self, slaveCon):
         self.group['slave'].remove(slaveCon)
-        print "WARNING: slave is down! Removed ", slaveCon, " from group"
+        
+        print "WARNING: slave is down! Attempting recovery"
+        addSlave(REPLICA_LIST.index(self))
         
     def check(self):
         # go over all servers and check if we need to initiate change
@@ -202,6 +210,7 @@ class ReplicaGroup(object):
         self.group['master'].stop()
         for slave in self.group['slave']:
             slave.stop()
+        self.group= {'master': None, 'slave': []}
     
     def getGroup(self):
         return self.group
@@ -244,14 +253,23 @@ def startNewReplicaGroup():
     newGroup = ReplicaGroup(servers)
     REPLICA_LIST.append(newGroup)
     
+def addSlave(groupnum):
+    if len(STAND_BY_LIST) > 0:
+        if len(REPLICA_LIST) != 0:
+            REPLICA_LIST[groupnum].addSlave(STAND_BY_LIST.pop(0))
+    else:
+        raise Exception("Not enough standby servers available...")
+    
+    
 def testSetup():
     restart()
     startNewReplicaGroup()
     
 def restart():
     stop()
-    connectServer('localhost', 8080, 8081)
-    connectServer('localhost', 8082, 8083)
+    connectServer('localhost', 4242, 4243)
+    connectServer('localhost', 8088, 8089)
+    connectServer('localhost', 8086, 8087)
     
     print 'STAND_BY_LIST', STAND_BY_LIST
     startNewReplicaGroup()
@@ -262,6 +280,7 @@ def startup():
     t.start()
     
 def start():
+    stop()
     try:
         testSetup()
     except:

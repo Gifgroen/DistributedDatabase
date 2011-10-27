@@ -6,17 +6,17 @@ All request messages return en LocationResponseHeader message
 """
 from generic.communication_pb2 import DictionaryResponseHeader, DictionaryHeader
 
+from twisted.python import log
+
 from dictionary.filetable import DictionaryTable
-
-from freelist.spacetable import FreeList
-
+from freelistclient import SimpleFreelistTestClient
 import uuid
 
 class LocationHandler:
     def __init__(self):
         self.requestHeader = None
         self.filetable = DictionaryTable()
-        self.fl = FreeList()
+        self.fl = SimpleFreelistTestClient('wingtip29.wing.rug.nl', 8000)
 
     def handleRequest(self, header):
         self.requestHeader = header
@@ -46,6 +46,7 @@ class LocationHandler:
         response -> Location message (READ) + redirect (not necessary here)
     """
     def handleGET(self):
+        # LocationEntry objects here!
         locs = self.filetable.get(self.requestHeader.key)
 
         rhead = DictionaryResponseHeader()
@@ -60,9 +61,8 @@ class LocationHandler:
 
     def add(self):
         # get space from freelist
-        locs = self.fl.allocSpace(self.requestHeader.size)
-        
-        generatedKey = False
+        locs = self.fl.allocateSpace(self.requestHeader.size)
+    
         if self.requestHeader.key != "":
             # use the existing key
             key = self.requestHeader.key
@@ -70,10 +70,9 @@ class LocationHandler:
             # generate a random key
             key = str(uuid.uuid4())
 
-        for loc in locs:
-            self.filetable.add(key, **loc)
+        self.filetable.add(key, locs)
             
-        return key
+        return key, self.filetable.get(key)
 
     """
     Handle ADD request
@@ -83,12 +82,12 @@ class LocationHandler:
     """
     def handleADD(self):
         rhead = DictionaryResponseHeader()
-        rhead.locations.extend([])
 
-        key = self.add()
+        key, locs = self.add()
         
         rhead.status = DictionaryResponseHeader.OK
         rhead.key = key
+        rhead.locations.extend([loc.toWriteMessage() for loc in locs])
         return rhead
 
 
@@ -97,8 +96,7 @@ class LocationHandler:
         locs = self.filetable.get(self.requestHeader.key)
 
         # Release in freelist
-        for loc in locs:
-            self.fl.releaseSpace(**loc.toDict())
+        self.fl.releaseSpace(locs)
         
         # Delete from filetable
         status = self.filetable.delete(self.requestHeader.key)

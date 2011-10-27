@@ -20,10 +20,12 @@ class DictionaryTable(object):
     Add an entry in the DictionaryTable
 	@return: the reference location under which the data is stored
     """
-    def add(self, key, hostname, port, offset, length):
+    def add(self, key, locs):
         if key not in self.locationDict:
             self.locationDict[key] = []
-        self.locationDict[key].append(LocationEntry(hostname, port, offset, length))
+
+        for (hostname, port, offset, length) in locs:
+            self.locationDict[key].append(LocationEntry(hostname, port, offset, length))
 
 
     """
@@ -33,7 +35,7 @@ class DictionaryTable(object):
     def get(self, key):
         if key in self.locationDict:
             return self.locationDict[key]
-        return []
+        return None
     
     """
     Delete an entry (or key) from the location table. 
