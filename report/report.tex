@@ -177,6 +177,8 @@ The storage instances itself does not guarantee fault-tolerant automatically. If
 
 For these management tasks the \verb|StorageManager| component is created. This component is currently not implemented in a redundant way, but this is not a difficult tasks since only two lists (\verb|STAND_BY_LIST| and \verb|ACTIVE_LIST|) must be kept synchronized. Also, it is not a big problem if the storage instance is down for a few seconds, this only means that if in the same time a storage instance also crashes it will not be detected, and thus not restored.
 
+% ping/echo system...
+
 \subsection{Dictionary Service}
 % TODO: by karsten
 
