@@ -94,7 +94,7 @@ def add(shortkey, size):
     status, key, locs = dictionary_connections[shortkey].doADD(size)
     if not status:
         del dictionary_connections[shortkey] # TODO DISCONNECT
-    print key, locs
+    #print key, locs
     return key, locs
     
 def delete(shortkey, key):
@@ -111,7 +111,8 @@ def get(shortkey, key):
     status, locations = dictionary_connections[shortkey].doGET(key)
     if not status:
         del dictionary_connections[shortkey]
-    print locations
+    #print locations
+    return locations
 
 def write(shortkey, offset, data):
     if shortkey not in connections:

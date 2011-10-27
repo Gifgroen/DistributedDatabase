@@ -73,7 +73,7 @@ class DictionaryClient(object):
         
         response = self.readMsg()
         if response.status == DictionaryResponseHeader.OK:
-            return True, response
+            return True, response.locations
             
         print response.status
         self.stop()
