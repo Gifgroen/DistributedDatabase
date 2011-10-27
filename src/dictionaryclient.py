@@ -55,7 +55,7 @@ class DictionaryClient(object):
             req.key = key
         #req.key = "foobar"  # REMOVE AFTER TESTING, RESULTS IN BAD BEHAVIOUR IN PRODUCTION ENV
         req.operation = DictionaryHeader.ADD
-        print req
+        #print req
         self.sendRequest(req)
         response = self.readMsg()
         if response.status == DictionaryResponseHeader.OK:
