@@ -182,9 +182,76 @@ For these management tasks the \verb|StorageManager| component is created. This 
 % ping/echo system...
 
 \subsection{Dictionary Service}
-% TODO: by karsten
+It is difficult to find a piece of data if you do not know where to look. When using a single system that obviously is not distributed then it is easy. But with storage servers that are distributed we need way to locate our data. Since this is an essential service it is of key importance that this service is always running, or at least most of the time. 
+
+\paragraph{The theory}
+The dictionary service is part of the third layer of the database system. Its responsibility is keeping a list of locations to storage servers that exist, possibly all around the world, without knowing where all these storage services are. A client can request (ADD), remove (DELETE) and read (GET) data from the dictionary service. These three operations (ADD, DELETE and GET) are all the operations that a client can perform on the dictionary service. An ADD operation issues a request for free space on a storage server to the freelist \ref{sec:freelist}. The dictionary maps these locations in local dictionary and returns a generated key and the generated locations back to the client. Figure \ref{fig:sequence-add} shows this in detail. There is one special thing with these locations. More on this in the security section. DELETE is similar to the ADD operation. With the only difference of 'traveling' in the other direction. When a client issues a DELETE to the dictionary service it is as easy as telling the freelist that the space is free again and throwing away the pointers to the actual data. The GET operation is the simplest of all. However it is also the most tricky one. More on this when we get to security.
+
+\paragraph{Communication interface}
+The means of communication with a dictionary server is through the three messages that are described below. 
+
+A client sends a Dictionary header message to the dictionary server containing the operation, the amount of bytes of data that it wants to store the key that defines a set of locations. and an issuer. The key and the size are optional and dependant on the operation. When issuing an ADD it makes no sense to send a key with the request. However with a GET it does not make sense to send the size of the data. One field that is important though is the issuer. This is used for replication and security. More on this in the respective sections.
+
+When a request is issued the dictionary responds with a \texttt{DictionaryResponseHeader} message. This message contains a status (Everything is OK, There is no more space to store data, or you are getting a unknown key. I everything works out and the dictionary returns a list of data locations (or storage instances to write to). This is a list of multiple locations since it is possible that one location cannot hold all the data. In this case the data is distributed over available space. A key is also returned which makes it possible to ask the dictionary service where my data was located. In this way we do not need to store the location, but only the key that `holds' the locations. The locations are transmitted as a host, a port and a signed request. This signed request is for security reasons.
+
+\begin{verbatim}
+message DictionaryHeader {
+    enum Operation {
+        GET = 1;
+        ADD = 2;
+        DELETE = 3;
+        HEARTBEAT = 4;
+    }
+    required Operation operation = 1;
+    required string issuer = 2;
+    optional string key = 3;
+    optional uint64 size = 4;
+}
+
+message DictionaryResponseHeader {
+    enum Status {
+        OK = 1;
+        NO_FREE_SPACE = 2;
+        NOT_EXISTING_KEY = 3;
+    }
+    required Status status = 1;
+    repeated DataLocation locations = 2;
+    optional string key = 3;
+}
+
+message DataLocation {
+    required HashedStorageHeader header = 1;
+    required uint64 port = 2;
+    required string host = 3;
+}
+\end{verbatim}
+
+
+\paragraph{Security}
+ADD locs -> These locations contain signed messages that prevent malicious clients to write/read to/from the obtained locations. Security is a big concern here.
+Message fields :)
+
+\paragraph{Replication of locations}
+Since the dictionary is the only place from which we can obtain the location of our physical data it has to be fully fail safe. If the dictionary service goes down for some reason it should still be possible to obtain our data. There are several ways to make the dictionary service fail save. We chose to do master slave replication as shown in figure \ref{fig:master-slave}. A client can contact a master or a slave this makes no difference to the client. However there are some difference to the dictionary server. We want to replicate different incoming requests. When a master or slave receive a GET request then there are no issues. The request is executed and the client gets what he requested. However ADD and DELETE are a different case. This actions have to be replicated in such a way that the dictionary is always consistent. A slave does not know anything about the other dictionary servers so it is not able to replicate. We want to prevent extra overhead in asking his master (which he does know) for the replicas it should contact. When a slave receives a ADD or DELETE request we chose to redirect the request to the master. The master then replicates the request to the slaves and everything works out as it should. One good thing to point out here is: "How does a slave know whether a request came from a client or his master server?". This is where the \texttt{issuer} field in the \textit{DictionaryHeader} message comes in. In this way the slave knows from who the request comes. One small setback in this approach is that we send one extra redirect message and then again get the same request. We essentially send one request to much.
+
+Okay now we can cope with failure of dictionary services. However a server might still fail and might need action from a server manager or maintainer. The management section \ref{sec:management-dictionary}
+
+\paragraph{Management}
+\label{sec:management-dictionary}
+The current master-slave setup is not fail safe or even initiated by itself. When a set of servers is started it currently has to be started by a physical caal to the manager. The manager then creates a replicagroup of a pre determined size $N$. The manager is able to create a group of one master and $N-1$ slaves. It keeps track of the replica groups and sends periodic heartbeat messages to make sure everything is OK. When a slave fails there is no reason to panic. The only thing we currently do is notify the user that a slave has gone down. It is worse if a master dies. When this happens it is no longer possible to issue an ADD or a DELETE since this needs a master. the manage is able to promote one of the slaves to the new master. all the other replicas get a notification that their master has changed and that they have to update the location of their master.
+
+% IT MAKES ABSOLUTELY NO SENSE TO PLACE THIS HERE. BUT SOMEHOW I CANNOT GET IT ON THE RIGHT LOCATION IF I PUT IT UNDER THE REPLICATION SECTION :S
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.4\textwidth]{diagrams/MasterSlave.png}
+\caption{Master-slave replication.}
+\label{fig:master-slave}
+\end{figure}
+
+
 
 \subsection{Freelist Service}
+\label{sec:freelist}
 % TODO describe:
 % - Implementation details:
 %   - Round robin scheduler (bad for fragmentation if loads of data will be removed)
@@ -206,8 +273,26 @@ Without the optional front-end layer this layer must know the mapping from dicti
 % storage service:
 % Remove blocking code between storageservice and parity server --> show blocking problem by sequence diagram, same for recovery
 % Private key meganism, now every server has its own private key which is a big security issue --> only operation,offset,length/data are signed, NOT HOST/PORT!
-% Reading from disk in chunks in order to prevent starvation of meerdere threads
+% Reading from disk in chunks in order to prevent starvation of meerdere (<- I believe the word is multiple :P ) threads 
 % how errors must be handled: storage engine returns one error --> redo entire process, dictionary service will free unwritten entities
+
+\subsection{Improvements in the dictionary service}
+There are several subjects in the current idea and implementation to investigate if they improve the dictionary service.
+
+\paragraph{Hashing of entire dictionary requests (security)}
+TODO: SOMETHING ABOUT THIS?
+
+\paragraph{Leader election to promote new master}
+In the current implementation when a master dies a random slave is promoted to be the new master. One very big flaw in this approach is that a master could have died in the middle of a replication action. This could mean that a part of the replica group does not hold consistent data. In this case choosing a random new master poses the threat of becoming inconsistent. Some sort of leader election could be used here to make sure that the most consistent slave gets a promotion to the new master. The choice you would have to make is whether consistency is preferred over availability since leader election takes time.
+
+\paragraph{On the fly replica group addition}
+When a master-slave set-up is unable to cope with the load that it holds it would come in handy if we could add slaves or even entire replica groups. This is not to make it cope with errors better but to cope with load. Because what we ultimately want is scalability. The overhead for extra communication could get big but some research in how to improve the system like this could be done. However this would only make sense if you would shard the data and create an extra shard. currently you cannot add a new replica on the fly since it would need to obtain the set of existing keys from the master. We did not implement this due to the lack of time.
+
+\paragraph{Auto `sign-in' on creation}
+When a dictionary service starts it should notify the manager that it wants work and become part of and support a certain replica group. This could happen in an automated way. The only thing that the dictionary would have to know the location of the manager which could plug it in to an exiting replica group or even create a new one.
+
+\paragraph{Ring for key distribution instead of Master-Slave (CHORD)}
+The master slave system gives us a properly working system that can handle errors. However the current database that exist on the market are able to shard their data. It would be nice if we would be able to do so too. What we essentially want is a peer to peer system in which it does not matter at all which dictionary service is contacted. I this service does not own the data (or key) itself than it is possible to search for the data through a virtual ring structure. The theory is described on wikipedia \footnote{http://en.wikipedia.org/wiki/Chord\_(peer-to-peer)}. Another thing we did research in was consistent hashing \footnote{http://weblogs.java.net/blog/tomwhite/archive/2007/11/consistent\_hash.html}. This is also a means of distributing keys over a set of nodes and makes it fail safe.
 
 % freelist service:
 % Single point of failure
