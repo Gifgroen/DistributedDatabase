@@ -132,11 +132,9 @@ The timestamped hashing principle ensures that clients cannot read or write data
 Since we use the Python Twisted asynchronous event framework, the implementation of the protocol parser is also created in this project. The problem of non-blocking IO is that you don't know how much data is received per event, and you don't know in advance if this is enough to parse the entire message. It was for this reason necessary to prepend the length of the message in front of the actual message data as shown in \autoref{fig:message-structure}. %TODO add reference: http://code.google.com/intl/nl-NL/apis/protocolbuffers/docs/techniques.html#streaming
 In this way, we are able to stream multiple messages over the same connection, this is very useful for the replication connection that is explained in the following section.
 
-% TODO: explain why original StorageHeader is returned in response message: client might be assynchrounous!
-
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.8\textwidth,trim=0 24cm 0 3cm,clip=true]{diagrams/message-structure.pdf}
+\includegraphics[width=0.8\textwidth,trim=0 23cm 0 3cm,clip=true]{diagrams/message-structure.pdf}
 \caption{Message structure of protocol.}
 \label{fig:message-structure}
 \end{figure}
@@ -180,6 +178,8 @@ For these management tasks the \verb|StorageManager| component is created. This 
 The management component is responsible for checking if all storage instances are working properly. This is done by a ping/echo system, the management component will send a fake storage \verb|READ| request every configurable time interval. We have chosen to send a fake storage request instead of a specific ping request since a storage request will really validate the storage pipeline (and not test if the ping-service is running correctly). Another benefit is that it is theoretically possible to measure the response time since all messages are put in a FIFO queue.
 
 \subsection{Dictionary Service}
+% TODO dictionary service? freeing dead memory (not implemented)... If a client doesn't succesfully upload a chunk (e.g. if a storage service dies in the meanwhile) the client will re-request this. So the dictionary should be able to discover that an added file is not written correctly after a while, and put this memory in the freelist again.
+
 It is difficult to find a piece of data if you do not know where to look. When using a single system that obviously is not distributed then it is easy. But with storage servers that are distributed we need way to locate our data. Since this is an essential service it is of key importance that this service is always running, or at least most of the time. 
 
 \paragraph{The theory}
@@ -250,12 +250,56 @@ The current master-slave setup is not fail safe or even initiated by itself. Whe
 
 \subsection{Freelist Service}
 \label{sec:freelist}
-% TODO describe:
-% - Implementation details:
-%   - Round robin scheduler (bad for fragmentation if loads of data will be removed)
-%   - Release/Alloc, no other knowledge
-%   - Move host principle
+As mentioned, the freelist service maintains all free space for an entire storage network. It actually maintains an unordered list of the available storage capacity of each storage instance, as shown in the following tuple: \verb|(host, port, offset, length)|. The freelist service has no other knowledge than this, which makes it very low coupled with the rest of the system.
 
+\paragraph{Communication Interface}
+The freelist provides the following public interface that allows \verb|allocateSpace|, \verb|releaseSpace| and \verb|moveHost| operations:
+\begin{verbatim}
+message SpaceLocation {
+    required string host = 1;
+    required uint64 port = 2;
+    required uint64 offset = 3;
+    required uint64 length = 4;
+}
+
+message FreelistRequest {
+    enum Operation {
+        ALLOCATE = 1;
+        RELEASE = 2;
+        MOVE_HOST = 3;
+    }
+    required Operation operation = 1;
+    // for ALLOCATE only:
+    optional uint64 numberOfBytes = 2;
+    // for RELEASE only:
+    repeated SpaceLocation releasedSpace = 3;
+    // for MOVE_HOST online:
+    optional StorageAdminServerLocation moveFrom = 4;
+    optional StorageAdminServerLocation moveTo = 5;
+}
+
+message FreeListResponse {
+    enum Status {
+        OK = 1;
+        ERROR = 2;
+    }
+    required Status status = 1;
+    optional string errorMsg = 2; // is set if status == ERROR
+    repeated SpaceLocation freeSpace = 3;
+}
+\end{verbatim}
+
+\paragraph{Scheduling}
+Because the freelist has the responsibility to provide the rest of the system with available memory chunks, it must decide which part of memory is released: \emph{which hosts} and \emph{how many chunks}. This is very important tasks since it influences the load in the entire system and also must solve difficult fragmentation issues. In order words, you don't want that single server instance has to handle all \verb|ADD| requests at one time, but you also don't want that the client has to upload its data of 1kb to 1024 servers.
+
+Since it is probably possible to write an entire master thesis about this topic, we have decided to use a simple \emph{Round Robin} scheduling mechanism in the current implementation. The major benefit of this is that the load is nicely spread among different instances under normal circumstances (a lot of small requests). However, if a large piece of memory will be requested it is possible that one server has to handle an enormous \verb|WRITE| request in one time. Nevertheless, the current implementation is able request that do not fit in one single piece of memory by spreading the data among a multiple pieces.
+
+Also, \emph{Round Robin} affects the fragmentation of free memory in a very bad way. Especially if a lot of small memory pieces will be released, the freelist will see this as a lot of different chunks (even if they are aligned next to each other). A possible improvement could be to make the freelist sorted with respect to the memory chunk size, and try to fit a request into the smallest chunk.
+
+\paragraph{Robustness with respect to dead storage instances}
+Single instances in the storage service layer can die and be replaced by a new server. This means that the freelist would free `dead` memory if no actions are performed. For this reason the \verb|moveHost| functionality is created, this allows the freelist to redirect all free space that is linked to one single host/port combination to a new host/port combination.
+
+Since the entire system will not wait before the system has finished the restore and redirect, it is the responsibility for the client to handling dead hosts in between. The client must have a robust implementation that will re-request an \verb|ADD| operation with a dead host, and the dictionary service must release this unsuccessfully uploaded space after a while.
 
 \subsection{Front-end / proxy}
 \subsection{Client}
