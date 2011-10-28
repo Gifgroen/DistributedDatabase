@@ -301,7 +301,6 @@ Single instances in the storage service layer can die and be replaced by a new s
 
 Since the entire system will not wait before the system has finished the restore and redirect, it is the responsibility for the client to handling dead hosts in between. The client must have a robust implementation that will re-request an \verb|ADD| operation with a dead host, and the dictionary service must release this unsuccessfully uploaded space after a while.
 
-\subsection{Front-end / proxy}
 \subsection{Client}
 Without the optional front-end layer this layer must know the mapping from dictionary keys to dictionary server instance.
 
