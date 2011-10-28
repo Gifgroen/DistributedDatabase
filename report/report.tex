@@ -175,11 +175,9 @@ The storage instances itself does not guarantee fault-tolerant automatically. If
 
 For these management tasks the \verb|StorageManager| component is created. This component is currently not implemented in a redundant way, but this is not a difficult tasks since only two lists (\verb|STAND_BY_LIST| and \verb|ACTIVE_LIST|) must be kept synchronized. Also, it is not a big problem if the storage instance is down for a few seconds, this only means that if in the same time a storage instance also crashes it will not be detected, and thus not restored.
 
-The management component is responsible for checking if all storage instances are working properly. This is done by a ping/echo system, the management component will send a fake storage \verb|READ| request every configurable time interval. We have chosen to send a fake storage request instead of a specific ping request since a storage request will really validate the storage pipeline (and not test if the ping-service is running correctly). Another benefit is that it is theoretically possible to measure the response time since all messages are put in a FIFO queue.
+The management component is responsible for checking if all storage instances are working properly. This is done by a ping/echo system, the management component will send a fake storage \verb|READ| request every configurable time interval. We have chosen to send a fake storage request instead of a specific ping request since a storage request will really validate the storage pipeline (and not test if the ping-service is running correctly). Another benefit is that it is theoretically possible to measure the response time since all messages are put in a FIFO queue in the current implementation (remember that this was not a requirement for the protocol itself).
 
 \subsection{Dictionary Service}
-% @Karsten, maybe you should describe this issue: TODO freeing dead memory (not implemented)... If a client doesn't succesfully upload a chunk (e.g. if a storage service dies in the meanwhile) the client will re-request this. So the dictionary should be able to discover that an added file is not written correctly after a while, and put this memory in the freelist again.
-
 It is difficult to find a piece of data if you do not know where to look. When using a single system that obviously is not distributed then it is easy. But with storage servers that are distributed we need way to locate our data. Since this is an essential service it is of key importance that this service is always running, or at least most of the time. 
 
 \paragraph{The theory}
@@ -241,7 +239,7 @@ The current master-slave setup is not fail safe or even initiated by itself. Whe
 % IT MAKES ABSOLUTELY NO SENSE TO PLACE THIS HERE. BUT SOMEHOW I CANNOT GET IT ON THE RIGHT LOCATION IF I PUT IT UNDER THE REPLICATION SECTION :S
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.4\textwidth]{diagrams/MasterSlave.png}
+\includegraphics[width=0.4\textwidth]{diagrams/MasterSlave.png} % TODO use trim+clip!
 \caption{Master-slave replication.}
 \label{fig:master-slave}
 \end{figure}
@@ -290,7 +288,8 @@ message FreeListResponse {
 \end{verbatim}
 
 \paragraph{Scheduling}
-Because the freelist has the responsibility to provide the rest of the system with available memory chunks, it must decide which part of memory is released: \emph{which hosts} and \emph{how many chunks}. This is very important tasks since it influences the load in the entire system and also must solve difficult fragmentation issues. In order words, you don't want that single server instance has to handle all \verb|ADD| requests at one time, but you also don't want that the client has to upload its data of 1kb to 1024 servers.
+\label{sec:scheduling}
+Because the freelist has the responsibility to provide the rest of the system with available memory chunks, it must decide which part of memory is released: \emph{which hosts} and \emph{how many chunks}. This is very important tasks since it influences the load in the entire system and also must solve difficult fragmentation issues. In other words, you don't want that single server instance has to handle all \verb|ADD| requests at one time, but you also don't want that the client has to upload its data of 1kb to 1024 servers.
 
 Since it is probably possible to write an entire master thesis about this topic, we have decided to use a simple \emph{Round Robin} scheduling mechanism in the current implementation. The major benefit of this is that the load is nicely spread among different instances under normal circumstances (a lot of small requests). However, if a large piece of memory will be requested it is possible that one server has to handle an enormous \verb|WRITE| request in one time. Nevertheless, the current implementation is able request that do not fit in one single piece of memory by spreading the data among a multiple pieces.
 
@@ -309,15 +308,44 @@ Without the optional front-end layer this layer must know the mapping from dicti
 % how fault-tollerant are we?
 
 \section{Future improvements}
-% system heavily relies on system clock (signing security) --> internal clock synchronization between components, is not implemented due the lack of time
+This section is intended to highlight some important improvements that we could not finish during the project.
 
-% storage service:
-% Remove blocking code between storageservice and parity server --> show blocking problem by sequence diagram, same for recovery
-% Private key meganism, now every server has its own private key which is a big security issue --> only operation,offset,length/data are signed, NOT HOST/PORT!
-% Reading from disk in chunks in order to prevent starvation of meerdere (<- I believe the word is multiple :P ) threads 
-% how errors must be handled: storage engine returns one error --> redo entire process, dictionary service will free unwritten entities
+\subsection{General}
+\paragraph{Clock synchronization between dictionary and storage services}
+The system heavily relies on the system clock because the timestamped hashing algorithm uses the normal wall-clock time to sign the storage requests. This mean that if there is a major time difference between the dictionary service (signer) and the storage service (validator) the authentication will always fail. We have seen that this can happen during the system testing. Clock synchronization between each component could easily solve this issue.
 
-\subsection{Improvements in the dictionary service}
+\paragraph{Key management}
+Every server instance must have its own SSL keys and the storage service must also have a unique private sign key (that is only shared the trusted dictionary service layer). Due to lack of time we were not able to implement this part, and now every component uses the same SSL key and every storage layer has the same private key.
+
+Because all storage services share the same sign-key in the current implementation it actually means that \emph{every} signed operation can be executed on \emph{every} client. This can be considered as a major security vulnerability.
+
+\paragraph{Improved error handling}
+In all cases, the client or optional front-end are responsible to retry an entire request if an error occurs. An error can be discovered if a response messages contains an error value, or if a request doesn't complete within a "reasonable" amount of time.
+
+Furthermore, the dictionary service must regularly check for "dead entries" in the filetable. A "dead entry" is an entry that is requested by a client, but the actual file is never written (i.e. the file-unlock request has never reached the dictionary service). This problem can occur when a \verb|WRITE| operation on a storage service has failed (e.g. client went down or storage service did crash). This last part is not implemented in the current implementation, so in case of an crash some memory is "leaked".
+
+Also, the client could handle some errors in a bit better way. For example, if the connection with a storage service is lost it should retry the \verb|READ| or \verb|WRITE| operation on the same storage instance again. This is possible since the signature timeout will not immediately expire.
+
+\subsection{Storage Service}
+\paragraph{Blocking code between storage and parity server}
+Currently the throughput between a storage server and another storage server (e.g. parity server or recovery connection) is affected by the blocking behavior of this connection. Now the sender service must wait until the entire \verb|XOR_WRITE| operation has completed and cannot continue sending new updates to the receiver. This should be solved by using asynchronous communication, as the protocol is originally intended for. However, such an asynchronous communication client was too complex to implement within this project. The difference between blocking and asynchronous is shown in \autoref{fig:blocking-async}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,trim=0 8cm 0 0,clip=true]{diagrams/blocking-async.png}
+\caption{Blocking (left) versus Asynchronous (right) communication.}
+\label{fig:blocking-async}
+\end{figure}
+
+\paragraph{Chunked reading of large files}
+Currently, a \verb|WRITE| request is forwarded to the disk process queue in one big chunk. However, this might give starvation of other requests if the request is very large. A way to solve this is to cut this bug chunk in different small chunks and to schedule these requests. A solution might be to have multiple threads reading the same file. 
+
+Ordering of the request at this level is not important (as long fairness is guaranteed) since the dictionary service will coordinate the consistency among the \verb|GET| and \verb|ADD| request.
+
+\paragraph{Supporting SET (overwriting existing keys)}
+Currently the \verb|SET| operation is not supported. The \verb|SET| operation is more complex than \verb|ADD| and \verb|GET| since it involves consistency within one item. Also in case of a \verb|SET| operation, the dictionary service must guarantee constancy (i.e. read only the new version if it is uploaded completely). For this reason, the \verb|SET| operation could be as best be implemented as a combination of \verb|ADD| and an update of the key in the filetable. In this way, the old file will still be available until a new version is uploaded.
+
+\subsection{Dictionary Service}
 There are several subjects in the current idea and implementation to investigate if they improve the dictionary service.
 
 \paragraph{Hashing of entire dictionary requests (security)}
@@ -335,10 +363,16 @@ When a dictionary service starts it should notify the manager that it wants work
 \paragraph{Ring for key distribution instead of Master-Slave (CHORD)}
 The master slave system gives us a properly working system that can handle errors. However the current database that exist on the market are able to shard their data. It would be nice if we would be able to do so too. What we essentially want is a peer to peer system in which it does not matter at all which dictionary service is contacted. I this service does not own the data (or key) itself than it is possible to search for the data through a virtual ring structure. The theory is described on wikipedia \footnote{http://en.wikipedia.org/wiki/Chord\_(peer-to-peer)}. Another thing we did research in was consistent hashing \footnote{http://weblogs.java.net/blog/tomwhite/archive/2007/11/consistent\_hash.html}. This is also a means of distributing keys over a set of nodes and makes it fail safe.
 
-% freelist service:
-% Single point of failure
-% No partition of data
-% fragmentation of memory....
+\subsection{Freelist Service}
+\paragraph{Fault tolerance and partition tolerance}
+The current implementation only supports one freelist instance that is not replicated at all, which results in a single point of failure in our system. Since the freelist is a very important component that must scale because all \verb|ADD| operations depend on it, it should be possible to partition the free memory among different nodes.
+
+However, this is a pretty difficult tasks since every node should be responsible for a subset of the available memory, but large file request should still be able to complete. We have not solved this issue during the project.
+
+\paragraph{Better scheduling to prevent fragmentation}
+As mention in \autoref{sec:scheduling} fragmentation will occur if a lot of \verb|DELETE| request are performed. A more intelligent scheduling algorithm could solve this.
+
+\subsection{Client}
 
 
 %ref: http://twistedmatrix.com/trac/
