@@ -28,7 +28,10 @@
 % omdat ik state of the art meer bij solution vind horen...
 
 \section{Context}
-The idea we had when starting this available distributed fault tolerant software system was to create a database system that nobody has ever seen before. Since that is an immensely
+The idea we had when starting this available distributed fault tolerant software system was to create a database system that nobody has ever seen before. Since that is an immensely difficult task. On a single computer it is perfectly possible to read and write effectively. However when we distribute the services of a storage system things get more complicated. What we basically want is to have a storage system from which we can read and write data in a scalable, consistent and fault tolerant way (that is we do not want to notice faults.
+
+When we started to think about what a data storage system would need we immediately chose the key value system. It would be desirable to store data in a way in which it has as less meaning as possible. A key-value storage system allows an application to store data in a schema-less way. Programming language or architecture should not pose a problem when storing the data. Because of this there is no need to store data in a structured way like SQL. Some initial ideas and principles we used are already implemented by some projects. Some of these are: Apache Cassandra, Amazon Dynamo and Project Voldemort.
+
 % basics principles of storage systems
 % key->value, distributed file systems, memcache
 % introduce fault-tolerance (replication) and scalability
@@ -47,7 +50,7 @@ The idea we had when starting this available distributed fault tolerant software
 
 \paragraph{Parity storage on application level}
 An important aspect of our application is that parity storage is used on the application level instead of hardware level as with Redundant Array of Independent Disks (RAID).% TODO: add RAID reference http://nl.wikipedia.org/wiki/Redundant_Array_of_Independent_Disks
-Actually, our system uses RAID4 on application level for storing redundant data. This solves the problem that much disk space is wasted for storing the data redundant: our implementation uses 2 storage services and 1 parity instance, so only $1/3$ is wasted for redundancy instead of $1/2$ with normal replication. Also, our system assumes that no underlying hardware RAID is used for each single server instance, which is usually the case in data centers.
+Actually, our system uses RAID4 on application level for storing redundant data. This solves the problem that much disk space is wasted for storing the data redundant: our implementation uses 2 storage services and 1 parity instance, so only $1/3$ is wasted for redundancy instead of $1/2$ with normal replication. Also, our system assumes that no underlying hardware RAID is used for each single server instance, which is usually the case in data centres.
 
 The system uses RAID4, which is major disadvantage that the entire system load depends on load of the parity disk as shown in \autoref{fig:xor-replication}. We have solved this by using multiple software instances on one single machine, which must ensure that the parity instances are spread among different physical servers. In this way, the load is spread as with RAID5 but in a more flexible and less structural way.
 
