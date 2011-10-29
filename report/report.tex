@@ -28,6 +28,7 @@
 % omdat ik state of the art meer bij solution vind horen...
 
 \section{Context}
+The idea we had when starting this available distributed fault tolerant software system was to create a database system that nobody has ever seen before. Since that is an immensely
 % basics principles of storage systems
 % key->value, distributed file systems, memcache
 % introduce fault-tolerance (replication) and scalability
@@ -40,6 +41,10 @@
 
 \section{State of the Art}
 \label{sec:state-of-the-art}
+% introduce XOR idea (raid4 and raid5)
+% introduce ring (P2P)
+% introduce consistent hashing compared with modulo
+
 \paragraph{Parity storage on application level}
 An important aspect of our application is that parity storage is used on the application level. This is in contrast with for example a Redundant Array of Independent Disks (RAID) that is performed on hardware level or at least below the operating system level~\cite{wiki-raid}.
 
