@@ -255,7 +255,7 @@ The current master-slave setup is not fail safe or even initiated by itself. Whe
 % IT MAKES ABSOLUTELY NO SENSE TO PLACE THIS HERE. BUT SOMEHOW I CANNOT GET IT ON THE RIGHT LOCATION IF I PUT IT UNDER THE REPLICATION SECTION :S
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth,trim=0 2cm 3cm 1cm,clip=true]{diagrams/MasterSlave.png} % TODO use trim+clip!
+\includegraphics[width=0.4\textwidth]{diagrams/MasterSlave.png} % TODO use trim+clip!
 \caption{Master-slave replication.}
 \label{fig:master-slave}
 \end{figure}
@@ -381,7 +381,7 @@ When a master-slave set-up is unable to cope with the load that it holds it woul
 When a dictionary service starts it should notify the manager that it wants work and become part of and support a certain replica group. This could happen in an automated way. The only thing that the dictionary would have to know the location of the manager which could plug it in to an exiting replica group or even create a new one.
 
 \paragraph{Ring for key distribution instead of Master-Slave (CHORD)}
-The master slave system gives us a properly working system that can handle errors. However the current database that exist on the market are able to shard their data. It would be nice if we would be able to do so too. What we essentially want is a peer to peer system in which it does not matter at all which dictionary service is contacted. I this service does not own the data (or key) itself than it is possible to search for the data through a virtual ring structure. The theory is described on wikipedia \footnote{http://en.wikipedia.org/wiki/Chord\_(peer-to-peer)}. Another thing we did research in was consistent hashing \footnote{http://weblogs.java.net/blog/tomwhite/archive/2007/11/consistent\_hash.html}. This is also a means of distributing keys over a set of nodes and makes it fail safe.
+The master slave system gives us a properly working system that can handle errors. However the current database that exist on the market are able to shard their data. It would be nice if we would be able to do so too. What we essentially want is a peer to peer system in which it does not matter at all which dictionary service is contacted. I this service does not own the data (or key) itself than it is possible to search for the data through a virtual ring structure. The theory is described on wikipedia \ref{chord}. Another thing we did research in was consistent hashing \ref{consistenthashing}. This is also a means of distributing keys over a set of nodes and makes it fail safe.
 
 \subsection{Freelist Service}
 \paragraph{Fault tolerance and partition tolerance}
