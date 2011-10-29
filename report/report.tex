@@ -316,8 +316,11 @@ We have implemented the client with a blocking connection for simplicity reasons
 Because the client is implemented in Python it is possible to simply use the Python command-line for storing and retrieving files.
 
 \section{Results}
-% discuss also the properties that are explained in the DS lectures
-% how fault-tollerant are we?
+In this project we have shown that our layer architecture works well for distributed storage system. The lowest layer, the storage service and freelist service, can be seen as a distributed filesystem. While, the dictionary layer gives meaning and constancy to individual files.
+
+We have especially used the fault-tolerant and replication topics of the lectures. For example, the dictionary service uses a master-slave architecture with a replica manager that was explained during the lecture. The storage service uses a special replica structure since it requires the parity server.
+
+Finally, we have to conclude that not the entire system can be considered as fault-tolerant. For example, the freelist is currently not replicated, and the dictionary service is not partitioned which might give scalability issues. At the same time, the dictionary service and storage service are fault-tolerant. Such improvements are discussed in the following section.
 
 \section{Future improvements}
 This section is intended to highlight some important improvements that we could not finish during the project.
@@ -385,7 +388,7 @@ The current implementation only supports one freelist instance that is not repli
 However, this is a pretty difficult tasks since every node should be responsible for a subset of the available memory, but large file request should still be able to complete. We have not solved this issue during the project.
 
 \paragraph{Better scheduling to prevent fragmentation}
-As mention in \autoref{sec:scheduling} fragmentation will occur if a lot of \verb|DELETE| request are performed. A more intelligent scheduling algorithm could solve this.
+As mention in \autoref{sec:scheduling} fragmentation will occur if a lot of \verb|DELETE| request are performed. A more intelligent scheduling algorithm could solve this. However, such an algorithm also requires that information about the available space and about the fragmentation must be shared across all nodes. This could probably done lazily with for example a Gossip Protocol.
 
 
 %ref: http://twistedmatrix.com/trac/
