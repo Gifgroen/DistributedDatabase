@@ -55,8 +55,7 @@ The main operations we should support are GET (getting data), ADD (adding new da
 % introduce consistent hashing compared with modulo
 
 \paragraph{Parity storage on application level}
-An important aspect of our application is that parity storage is used on the application level instead of hardware level as with Redundant Array of Independent Disks (RAID).% TODO: add RAID reference http://nl.wikipedia.org/wiki/Redundant_Array_of_Independent_Disks
-Actually, our system uses RAID4 on application level for storing redundant data. This solves the problem that much disk space is wasted for storing the data redundant: our implementation uses 2 storage services and 1 parity instance, so only $1/3$ is wasted for redundancy instead of $1/2$ with normal replication. Also, our system assumes that no underlying hardware RAID is used for each single server instance, which is usually the case in data centres.
+An important aspect of our application is that parity storage is used on the application level instead of hardware level as with Redundant Array of Independent Disks (RAID). Actually, our system uses RAID4 on application level for storing redundant data. This solves the problem that much disk space is wasted for storing the data redundant: our implementation uses 2 storage services and 1 parity instance, so only $1/3$ is wasted for redundancy instead of $1/2$ with normal replication. Also, our system assumes that no underlying hardware RAID is used for each single server instance, which is usually the case in data centres.
 
 The system uses RAID4, which is normal a major disadvantage because the entire system throughput depends on the parity server as shown in \autoref{fig:xor-replication}. We have solved this by using multiple software instances on one single machine, which must ensure that the parity instances are spread among different physical servers. In this way, the load is spread as with RAID5 but in a more flexible and less structural way.
 
