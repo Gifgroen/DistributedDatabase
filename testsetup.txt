@@ -1,0 +1,28 @@
+# storage servers:
+./storageserver.py -p 8080 -a 8081 -d server1.bin
+./storageserver.py -p 8082 -a 8083 -d server2.bin
+./storageserver.py -p 8084 -a 8085 -d server3.bin
+./storageserver.py -p 8084 -a 8085 -d server3.bin
+
+# freelist:
+./freelistserver.py -p 8888
+
+# Dictionary (master, 2 slaves):
+./dictionaryserver.py -p 8000 -a 8001 -w 9990
+./dictionaryserver.py -p 8002 -a 8003 -w 9991
+./dictionaryserver.py -p 8004 -a 8005 -w 9992
+
+# Manager:
+python
+from manager import *
+start()
+testSetup()
+
+# Commandline client:
+python
+from client import *
+key = store("DATA")
+print retrieve(key)
+
+# Webclient (runs always on 7777):
+./webclient.py
