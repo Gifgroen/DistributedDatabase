@@ -23,7 +23,7 @@ class DictionaryTable(object):
     def add(self, key, locs):
         if key not in self.locationDict:
             self.locationDict[key] = []
-
+        print locs
         for (hostname, port, offset, length) in locs:
             self.locationDict[key].append(LocationEntry(hostname, port, offset, length))
 

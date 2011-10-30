@@ -16,7 +16,7 @@ class LocationHandler:
     def __init__(self):
         self.requestHeader = None
         self.filetable = DictionaryTable()
-        self.fl = SimpleFreelistTestClient('wingtip29.wing.rug.nl', 8000)
+        self.fl = SimpleFreelistTestClient('localhost', 4242)
 
     def handleRequest(self, header):
         self.requestHeader = header

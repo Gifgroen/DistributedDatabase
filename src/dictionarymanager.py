@@ -14,7 +14,7 @@ from twisted.python import log
 
 HEARTBEAT_SECONDS = 10 # low for testing
 
-REPLICA_GROUP_SIZE = 3
+REPLICA_GROUP_SIZE = 2
 
 STAND_BY_LIST = []   # Connections
 REPLICA_LIST = []    # Replicagroups
@@ -275,8 +275,8 @@ def testSetup():
     
 def restart():
     stop()
-    connectServer('localhost', 4242, 4243)
-    connectServer('localhost', 8088, 8089)
+    connectServer('localhost', 8080, 8081)
+    connectServer('localhost', 8083, 8084)
     connectServer('localhost', 8086, 8087)
     
     print 'STAND_BY_LIST', STAND_BY_LIST
