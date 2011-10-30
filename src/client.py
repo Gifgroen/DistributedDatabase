@@ -62,5 +62,6 @@ def retrieve(key):
             client = StorageClient(loc)
             result += client.read()
             client.stop()
-    return result
+        return result
+    return None
     
