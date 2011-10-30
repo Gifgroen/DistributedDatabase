@@ -55,7 +55,7 @@ def testSetup():
     assert HEARTBEAT_THREAD is not None
     
     # ----------------------------- CONFIG -----------------------------
-    # dictionary server addresses:
+    # dictionary server addresses (host, clientPort, adminPort):
     master = 'localhost', 8000, 8001
     slave1 = 'localhost', 8002, 8003
     slave2 = 'localhost', 8004, 8005
@@ -63,7 +63,7 @@ def testSetup():
     # freelist address:
     freelist = 'localhost', 8888 # NOTE: also set in dictionary/dictionaryserver.py:24
     
-    # storage addresses:
+    # storage addresses (host, clientPort, adminPort):
     storageServers = [
         ('localhost', 8080, 8081),
         ('localhost', 8082, 8083),
@@ -80,7 +80,7 @@ def testSetup():
     startNewReplicaGroup()
     
     setFreelistConnection(SimpleFreelistTestClient(*freelist))
-    setDictionaryConnection(DictionaryAdminClient(*master[:2]))
+    setDictionaryConnection(DictionaryAdminClient(master[0], master[2]))
     
     for storageAddress in storageServers:
         addStorageServer(*storageAddress)
