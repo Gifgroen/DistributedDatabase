@@ -130,28 +130,5 @@ def read(shortkey, offset, length):
         del connections[shortkey] 
     return readData
 
-def store(shortKey, data):
-    key, locs = add(shortKey, len(data))
-    for msg in locs:
-        print 'WRITE:', msg
-        connection = BlockingProtoBufConnection(StorageResponseHeader)
-        connection.start(msg.host, msg.port)
-        connection.sendMsg(msg.header)
-        connection.sendRawBytes(data)
-        print connection.readMsg()
-    print 'Stored key', key
-    
-def retrieve(shortKey, key):
-    locs = get(shortKey, key)
-    result = ""
-    for msg in locs:
-        print "READ:"
-        connection = BlockingProtoBufConnection(StorageResponseHeader)
-        connection.start(msg.host, msg.port)
-        connection.sendMsg(msg.header)
-        # TODO stop on error
-        print connection.readMsg()
-        print "reading raw data..."
-        result += connection.readNBytes(msg.header.header.length)
-    print result
+
         
