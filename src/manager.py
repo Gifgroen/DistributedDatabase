@@ -10,6 +10,11 @@ from storagemanager import addServer as addStorageServer
 from storagemanager import setDictionaryConnection, setFreelistConnection
 from storagemanager import startNewGroup as startNewStorageGroup
 
+from dictionarymanager import checkAllDictionaryServers
+from dictionarymanager import stop as dictionaryStop
+from dictionarymanager import connectServer as addDictionaryServer
+from dictionarymanager import startNewReplicaGroup
+
 
 HEARTBEAT_SECONDS = 10 # low for testing
 HEARTBEAT_THREAD = None
@@ -21,6 +26,7 @@ def heartBeatJob():
         start = time()
         
         checkAllStorageServers()
+        checkAllDictionaryServers()
         
         # check again in heartbeat time seconds (minus the time the job took)
         sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
@@ -35,6 +41,7 @@ def stop():
     HEARTBEAT_THREAD = None
     
     storageStop()
+    dictionaryStop()
     
     
 def start():
@@ -44,13 +51,39 @@ def start():
     HEARTBEAT_THREAD.start()
 
 def testSetup():
-    setFreelistConnection(SimpleFreelistTestClient('localhost', 8000))
-    setDictionaryConnection(DictionaryAdminClient('localhost', 8001))
+    global HEARTBEAT_THREAD
+    assert HEARTBEAT_THREAD is not None
     
-    addStorageServer('localhost', 8080, 8081)
-    addStorageServer('localhost', 8082, 8083)
-    addStorageServer('localhost', 8084, 8085)
-    addStorageServer('localhost', 8086, 8087)
+    # ----------------------------- CONFIG -----------------------------
+    # dictionary server addresses:
+    master = 'localhost', 8000, 8001
+    slave1 = 'localhost', 8002, 8003
+    slave2 = 'localhost', 8004, 8005
+    
+    # freelist address:
+    freelist = 'localhost', 8888 # NOTE: also set in dictionary/dictionaryserver.py:24
+    
+    # storage addresses:
+    storageServers = [
+        ('localhost', 8080, 8081),
+        ('localhost', 8082, 8083),
+        ('localhost', 8084, 8085),
+        ('localhost', 8086, 8087)
+    ]
+    # -------------------------- END CONFIG -----------------------------
+    
+    # setup everything
+    addDictionaryServer(*master)
+    addDictionaryServer(*slave1)
+    addDictionaryServer(*slave2)
+    
+    startNewReplicaGroup()
+    
+    setFreelistConnection(SimpleFreelistTestClient(*freelist))
+    setDictionaryConnection(DictionaryAdminClient(*master[:2]))
+    
+    for storageAddress in storageServers:
+        addStorageServer(*storageAddress)
     
     startNewStorageGroup()
     

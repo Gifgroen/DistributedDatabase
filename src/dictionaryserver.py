@@ -21,7 +21,7 @@ class DictionaryServer(FixedLengthMessageServer):
         self.factory.handlerClass = DictionaryRequestHandler
         self.factory.protocol = BinaryMessageProtocol
         self.factory.protocolVersion = 0b1
-        self.factory.delegate = LocationHandler('localhost', 8000)# TODO: should be set automatically
+        self.factory.delegate = LocationHandler('localhost', 8888)# TODO: should be set automatically
         self.factory.master = {}
         self.factory.isMaster = False
         self.factory.replicaList = []

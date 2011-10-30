@@ -12,8 +12,6 @@ import socket
 
 from twisted.python import log
 
-HEARTBEAT_SECONDS = 10 # low for testing
-
 REPLICA_GROUP_SIZE = 3
 
 STAND_BY_LIST = []   # Connections
@@ -231,17 +229,11 @@ def connectServer(host, clientPort, adminPort):
     newServer = Connection(host, clientPort, adminPort)
     STAND_BY_LIST.append(newServer)
     
-def heartBeatJob():
-    while True:
-        start = time()
-        
-        #do something usefull
-        for group in REPLICA_LIST:
-            group.check()
-        # check again in heartbeat time seconds (minus the time the job took)
-        sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
-        #print 'sleep %d seconds' % sleep_secs
-        sleep(sleep_secs)
+def checkAllDictionaryServers():
+    #do something usefull
+    for group in REPLICA_LIST:
+        group.check()
+
 
 def _createReplicaGroup(servers = None):
     if not servers:
@@ -267,33 +259,6 @@ def addSlave(groupnum):
             REPLICA_LIST[groupnum].addSlave(STAND_BY_LIST.pop(0))
     else:
         raise Exception("Not enough standby servers available...")
-    
-    
-def testSetup():
-    restart()
-    startNewReplicaGroup()
-    
-def restart():
-    stop()
-    connectServer('localhost', 4242, 4243)
-    connectServer('localhost', 8088, 8089)
-    connectServer('localhost', 8086, 8087)
-    
-    print 'STAND_BY_LIST', STAND_BY_LIST
-    startNewReplicaGroup()
-    print 'REPLICA_LIST', REPLICA_LIST    
-
-def startup():
-    t = Thread(target=heartBeatJob, name='HeartBeatJob')
-    t.start()
-    
-def start():
-    stop()
-    try:
-        testSetup()
-    except:
-        pass
-    startup()
     
 def stop():
     for server in STAND_BY_LIST:
