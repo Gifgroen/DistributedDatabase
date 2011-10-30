@@ -13,10 +13,10 @@ from freelistclient import SimpleFreelistTestClient
 import uuid
 
 class LocationHandler:
-    def __init__(self):
+    def __init__(self, host, port):
         self.requestHeader = None
         self.filetable = DictionaryTable()
-        self.fl = SimpleFreelistTestClient('wingtip29.wing.rug.nl', 8000)
+        self.fl = SimpleFreelistTestClient(host, port)
 
     def handleRequest(self, header):
         self.requestHeader = header

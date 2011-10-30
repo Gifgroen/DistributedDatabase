@@ -108,7 +108,7 @@ class DictionaryAdminClient(object):
     Close the connection
     """
     def stop(self):
-        print "Con closed"
+        #print "Con closed"
         self.connection.stop()
 
 class Connection(object):

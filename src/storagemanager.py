@@ -1,15 +1,10 @@
 from storageclient import SimpleStorageTestClient
-from freelistclient import SimpleFreelistTestClient
-from dictionarymanager import DictionaryAdminClient
+
 from storageserver import DEFAULT_DB_SIZE # TODO FOR TESTING ONLY...
 from generic.protobufconnection import BlockingProtoBufConnection
-from threading import Thread, currentThread
-from time import time, sleep
 import socket
 
 from generic.communication_pb2 import StorageAdminResponse, StorageAdminRequestContainer, StorageAdminRecoveryOperation, StorageAdminServerLocation
-
-HEARTBEAT_SECONDS = 10 # low for testing
 
 STAND_BY_LIST = [] # Connections
 ACTIVE_LIST = [] # Raidgroups
@@ -19,7 +14,6 @@ TEST_MODE = True # disables checking for hosts
 FREELIST_CONNECTION = None
 DICTIONARY_CONNECTION = None
 
-HEARTBEAT_THREAD = None
 
 class AdminStorageClient(object):
     def __init__(self, host, port):
@@ -154,18 +148,9 @@ class RaidGroup(object):
     def __repr__(self):
         return '(A=%s,B=%s,X=%s)' % (self.serverA, self.serverB, self.xorServer)
             
-def heartBeatJob():
-    global HEARTBEAT_THREAD
-    while HEARTBEAT_THREAD == currentThread():
-        #print 'heartBeatJob'
-        start = time()
-        for group in ACTIVE_LIST:
-            group.check()
-        # check again in heartbeat time seconds (minus the time the job took)
-        sleep_secs = max(HEARTBEAT_SECONDS - (int(time() - start)), 0)
-        #print 'sleep %d seconds' % sleep_secs
-        sleep(sleep_secs)
-    print 'heartbeat thread stopped'
+def checkAllStorageServers():
+    for group in ACTIVE_LIST:
+        group.check()
     
 def addServer(host, clientPort, adminPort):
     newServer = Connection(host, clientPort, adminPort)
@@ -194,37 +179,33 @@ def startNewGroup():
 
 
 def stop():
-    global HEARTBEAT_THREAD
-    HEARTBEAT_THREAD = None
+    # stop all standby servers
     for server in STAND_BY_LIST:
         server.stop()
     del STAND_BY_LIST[:]
+    
+    # stop all active groups
     for group in ACTIVE_LIST:
         group.stop()
     del ACTIVE_LIST[:]
+    
+    #stop freelist connection
     global FREELIST_CONNECTION, DICTIONARY_CONNECTION # prevents undefined var error...
     if FREELIST_CONNECTION:
         FREELIST_CONNECTION.stop()
     FREELIST_CONNECTION = None
+    
+    #stop dictionary connection
     if DICTIONARY_CONNECTION:
         DICTIONARY_CONNECTION.stop()
     DICTIONARY_CONNECTION = None
     
-def start():
-    global HEARTBEAT_THREAD
-    HEARTBEAT_THREAD = Thread(target=heartBeatJob, name='HeartBeatJob')
-    HEARTBEAT_THREAD.start()
+def setDictionaryConnection(conn):
+    global DICTIONARY_CONNECTION
+    DICTIONARY_CONNECTION = conn
     
-    global FREELIST_CONNECTION, DICTIONARY_CONNECTION
-    #FREELIST_CONNECTION = SimpleFreelistTestClient('localhost', 8000)
-    FREELIST_CONNECTION = SimpleFreelistTestClient('wingtip29.wing.rug.nl', 8000)
-    DICTIONARY_CONNECTION = DictionaryAdminClient('129.125.219.84', 4243)
-    addServer('localhost', 8080, 8081)
-    addServer('localhost', 8082, 8083)
-    addServer('localhost', 8084, 8085)
-    addServer('localhost', 8086, 8087)
-    
-    print 'STAND_BY_LIST', STAND_BY_LIST
-    startNewGroup()
-    print 'ACTIVE_LIST', ACTIVE_LIST
+def setFreelistConnection(conn):
+    global FREELIST_CONNECTION
+    FREELIST_CONNECTION = conn
 
+    
