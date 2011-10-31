@@ -33,9 +33,9 @@ class StorageClient(object):
         self.connection.stop()
         
 
-def store(data):
+def store(data, dictHost=DICTIONARY_HOST, dictPort=DICTIONARY_PORT):
     # get locations from dictionary client
-    dictClient = DictionaryClient(DICTIONARY_HOST, DICTIONARY_PORT)
+    dictClient = DictionaryClient(dictHost, dictPort)
     status, key, locs = dictClient.doADD(len(data))
     dictClient.stop()
     if status:
@@ -50,9 +50,9 @@ def store(data):
         dictClient.stop()
     return key
     
-def retrieve(key):
+def retrieve(key, dictHost=DICTIONARY_HOST, dictPort=DICTIONARY_PORT):
     # get location from dictionary client
-    dictClient = DictionaryClient(DICTIONARY_HOST, DICTIONARY_PORT)
+    dictClient = DictionaryClient(dictHost, dictPort)
     status, locs = dictClient.doGET(key)
     dictClient.stop()
     if status:
