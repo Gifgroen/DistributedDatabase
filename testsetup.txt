@@ -3,14 +3,17 @@
 ./storageserver.py -p 8082 -a 8083 -d server2.bin
 ./storageserver.py -p 8084 -a 8085 -d server3.bin
 ./storageserver.py -p 8086 -a 8087 -d server4.bin
+./storageserver.py -p 8088 -a 8089 -d server5.bin
+
 
 # freelist:
 ./freelistserver.py -p 8888
 
-# Dictionary (master, 2 slaves):
+# Dictionary (master, 3 slaves):
 ./dictionaryserver.py -p 8000 -a 8001 -w 9990
 ./dictionaryserver.py -p 8002 -a 8003 -w 9991
 ./dictionaryserver.py -p 8004 -a 8005 -w 9992
+./dictionaryserver.py -p 8006 -a 8007 -w 9993
 
 # Manager:
 python
