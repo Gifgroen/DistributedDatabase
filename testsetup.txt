@@ -2,7 +2,7 @@
 ./storageserver.py -p 8080 -a 8081 -d server1.bin
 ./storageserver.py -p 8082 -a 8083 -d server2.bin
 ./storageserver.py -p 8084 -a 8085 -d server3.bin
-./storageserver.py -p 8084 -a 8085 -d server3.bin
+./storageserver.py -p 8086 -a 8087 -d server4.bin
 
 # freelist:
 ./freelistserver.py -p 8888
